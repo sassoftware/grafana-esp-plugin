@@ -27,23 +27,15 @@ jobs:
 
     - name: Build
       run: go run mage.go
-  
-  prepare-yarn:
-    name: Prepare
-    runs-on: ubuntu-latest
-    steps:
-      - uses: DerYeger/yarn-setup-action@master
-        with:
-          node-version: 16
 
   install-yarn:
     name: Build Yarn
     runs-on: ubuntu-latest
-    needs: [prepare-yarn, build-go]
+    needs: [build-go]
     steps:
       - uses: DerYeger/yarn-setup-action@master
         with:
-          node-version: 16
+          node-version: 16.14.0
       - run: |
           yarn install
           yarn build
