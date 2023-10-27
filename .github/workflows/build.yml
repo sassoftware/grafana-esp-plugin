@@ -12,8 +12,8 @@ on:
 
 jobs:
  
-  build-go:
-    name: Build Go
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -23,21 +23,19 @@ jobs:
       with:
         go-version: '1.20'
 
-    - name: Build
+    - name: Build go
       run: |
         go run mage.go
         pwd
         ls -la ./dist
-
-  install-yarn:
-    name: Build Yarn
-    runs-on: ubuntu-latest
-    needs: [build-go]
-    steps:
-      - uses: DerYeger/yarn-setup-action@master
+    
+    - name: Set up yarn
+      uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 16.14.0
-      - run: |
-          yarn build
-          pwd
-          ls -la ./dist
+    
+    - name: Build yarn
+      run: |
+        yarn build
+        pwd
+        ls -la ./dist
