@@ -31,8 +31,8 @@ jobs:
     
     - name: Set up yarn
       uses: DerYeger/yarn-setup-action@master
-        with:
-          node-version: 16.14.0
+      with:
+        node-version: 16.14.0
     
     - name: Build yarn
       run: |
