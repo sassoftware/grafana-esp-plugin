@@ -16,7 +16,16 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Set up yarn
+      uses: DerYeger/yarn-setup-action@master
+      with:
+        node-version: 16.14.0
+    
+    - name: Build yarn
+      run: |
+        yarn build
+        pwd
+        ls -la ./dist
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -26,16 +35,5 @@ jobs:
     - name: Build go
       run: |
         go run mage.go
-        pwd
-        ls -la ./dist
-    
-    - name: Set up yarn
-      uses: DerYeger/yarn-setup-action@master
-      with:
-        node-version: 16.14.0
-    
-    - name: Build yarn
-      run: |
-        yarn build
         pwd
         ls -la ./dist
