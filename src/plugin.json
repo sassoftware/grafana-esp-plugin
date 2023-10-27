@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "SAS Event Stream Processing",
+  "id": "sasesp-plugin",
+  "metrics": true,
+  "backend": true,
+  "streaming": true,
+  "executable": "gpx_sas-esp-plugin",
+  "info": {
+    "description": "SAS Event Stream Processing Data Source",
+    "author": {
+      "name": "SAS Institute Inc.",
+      "url": "https://www.sas.com"
+    },
+    "keywords": [
+      "edge",
+      "streaming",
+      "analytics"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/sassoftware/esp-grafana-plugin"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/sassoftware/esp-grafana-plugin/blob/main/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=7.0.0",
+    "plugins": []
+  }
+}

@@ -1,0 +1,28 @@
+# Blacklist files/folders in same directory as the .gitignore file
+/*
+
+# Whitelist our source files and folders
+!/internal/
+!/pkg
+!/.config
+
+# Whitelist project files
+!/.gitignore
+!/.eslintrc
+!/.prettierrc.js
+!/CHANGELOG.md
+!/LICENSE
+!/magefile.go
+!/README.md
+!/go.mod
+!/go.sum
+!/jest.config.js
+!/jest-setup.js
+!/package-lock.json
+!/package.json
+!/tsconfig.json
+!/yarn.lock
+!/src
+!/sage
+!/ci
+!/install
