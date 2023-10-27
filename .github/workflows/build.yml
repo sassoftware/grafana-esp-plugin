@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main", "build-test" ]
+  pull_request:
+    branches: [ "main", "build-test" ]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Make a release build'
+        required: false
+        type: boolean
+
+jobs:
+ 
+  build-go:
+    name: Build Go
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Build
+      run: go run mage.go
+  
+  prepare-yarn:
+    name: Prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 16
+
+  install-yarn:
+    name: Build Yarn
+    runs-on: ubuntu-latest
+    needs: [prepare-yarn, build-go]
+    steps:
+      - uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 16
+      - run: |
+          yarn install
+          yarn build
