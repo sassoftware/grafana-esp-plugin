@@ -3,8 +3,6 @@ name: Build
 on:
   push:
     branches: [ "main", "build-test" ]
-  pull_request:
-    branches: [ "main", "build-test" ]
   workflow_dispatch:
     inputs:
       release:
@@ -37,5 +35,6 @@ jobs:
         with:
           node-version: 16.14.0
       - run: |
-          yarn install
           yarn build
+          pwd
+          ls ./dist
