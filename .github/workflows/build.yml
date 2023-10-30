@@ -43,6 +43,7 @@ jobs:
         ls -la
     
     - uses: actions/upload-artifact@v3
+      name: Attatch artifacts to job
       with:
         name: sasesp-plugin-zip-files
         path: ./sasesp-plugin*.zip

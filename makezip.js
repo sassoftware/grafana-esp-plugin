@@ -13,7 +13,7 @@ zip({
 
 zip({
   source: packageJson.name + '-all' + '/*',
-  destination: './' + packageJson.name '-' + packageJson.version + '-all' + '.zip'
+  destination: './' + packageJson.name + '-' + packageJson.version + '-all' + '.zip'
 }).then(function() {
   console.log('Zip complete.');
 }).catch(function(err) {
