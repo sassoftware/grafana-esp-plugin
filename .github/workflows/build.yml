@@ -35,40 +35,13 @@ jobs:
     - name: Build go
       run: |
         go run mage.go
-        pwd
         ls -la ./dist
-    
-    - name: Get npm version
-      uses: martinbeentjes/npm-get-version-action@v1.3.1
-      
-    - name: Create directories
+        
+    - name: Zip artifacts
       run: |
-        mv dist sasesp-plugin
-        mkdir dist
-        mv sasesp-plugin ./dist
-    
-    - name: Zip archives
-      uses: montudor/action-zip@v1
-      with:
-        args: zip -qq -r sasesp-plugin-${{ steps.package-version.outputs.current-version}}-full.zip dist
-        
-    - name: Create directories 2
-      run: | 
-        rm ./dist/sas-esp-grafana-plugin/*darwin*
-        rm ./dist/sas-esp-grafana-plugin/*windows*
-        rm ./dist/sas-esp-grafana-plugin/*arm*
-    
-    - name: Zip archives 2
-      uses: montudor/action-zip@v1
-      with:
-        args: zip -qq -r sasesp-plugin-${{ steps.package-version.outputs.current-version}}.zip dist
-        
-    - uses: actions/upload-artifact@v2
-      with:
-        name: sasesp-plugin-${{ steps.package-version.outputs.current-version}}.zip
-        path: sasesp-plugin-${{ steps.package-version.outputs.current-version}}.zip
+        yarn zip
+        ls -la
     
     - uses: actions/upload-artifact@v2
       with:
-        name: sasesp-plugin-${{ steps.package-version.outputs.current-version}}-full.zip
-        path: sasesp-plugin-${{ steps.package-version.outputs.current-version}}-full.zip
+        path: *.zip
