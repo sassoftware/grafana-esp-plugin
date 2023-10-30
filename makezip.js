@@ -12,8 +12,8 @@ zip({
 });
 
 zip({
-  source: packageJson.name + '-full' + '/*',
-  destination: './' + packageJson.name + '-full' + '-' + packageJson.version + '.zip'
+  source: packageJson.name + '-all' + '/*',
+  destination: './' + packageJson.name '-' + packageJson.version + '-all' + '.zip'
 }).then(function() {
   console.log('Zip complete.');
 }).catch(function(err) {

@@ -15,7 +15,7 @@
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",
     "typecheck": "tsc --noEmit",
-	"zip": "cp -r dist sasesp-plugin && rm ./sasesp-plugin/*darwin* && rm ./sasesp-plugin/*windows* && rm ./sasesp-plugin/*arm* && cp -r dist sasesp-plugin-full && node makezip.js"
+	"zip": "cp -r dist sasesp-plugin && rm ./sasesp-plugin/*darwin* && rm ./sasesp-plugin/*windows* && rm ./sasesp-plugin/*arm* && cp -r dist sasesp-plugin-all && node makezip.js"
   },
   "license": "Apache-2.0",
   "devDependencies": {
