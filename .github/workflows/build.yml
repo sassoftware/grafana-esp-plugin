@@ -21,11 +21,19 @@ jobs:
       with:
         node-version: 16.14.0
     
+    - name: Get current version
+      id: current_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        dry_run: true
+    
     - name: Build yarn
       run: |
+        yarn version --new-version ${{ steps.current_version.outputs.new_version }} --no-git-tag-version
         yarn build
-        pwd
-        ls -la ./dist
+        yarn lint
+        yarn test:ci
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -35,12 +43,10 @@ jobs:
     - name: Build go
       run: |
         go run mage.go
-        ls -la ./dist
         
     - name: Zip artifacts
       run: |
         yarn zip
-        ls -la
     
     - uses: actions/upload-artifact@v3
       name: Attatch artifacts to job
@@ -51,7 +57,7 @@ jobs:
     
     - name: Bump version and push tag
       if: ${{ inputs.release }}
-      id: tag_version
+      id: release_version
       uses: mathieudutour/github-tag-action@v6.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +66,7 @@ jobs:
       if: ${{ inputs.release }}
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ steps.tag_version.outputs.new_tag }}
-        name: Release ${{ steps.tag_version.outputs.new_tag }}
-        body: ${{ steps.tag_version.outputs.changelog }}
+        tag: ${{ steps.release_version.outputs.new_tag }}
+        name: Release ${{ steps.release_version.outputs.new_tag }}
+        body: ${{ steps.release_version.outputs.changelog }}
         artifacts: "./sasesp-plugin*.zip"
