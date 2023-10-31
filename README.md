@@ -15,7 +15,7 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 * A Grafana deployment with the name `grafana`, running in the same namespace as lightweight SAS Event Stream Processing.
 * It is recommended to have an Ingress for the Grafana deployment.
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
-* Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/esp-grafana-plugin/releases](https://github.com/sassoftware/esp-grafana-plugin/releases).
+* Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 
 ## Install a Released Version of the Plug-in
 
@@ -36,7 +36,7 @@ Use the provided installation script to install the plug-in:
 
    ```
    cd ./install
-   bash configure-grafana.sh <namespace> https://github.com/sassoftware/esp-grafana-plugin/releases/download/<version>/sas-esp-grafana-plugin-<version>.zip
+   bash configure-grafana.sh <namespace> https://github.com/sassoftware/grafana-esp-plugin/download/<version>/sasesp-plugin-<version>.zip
    ```
 
 ## (Optional) Build and Install a Privately Signed Version of the Plug-in
