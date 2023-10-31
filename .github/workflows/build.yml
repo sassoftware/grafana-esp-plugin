@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: 'Make a release build'
+        description: 'Make this a release build'
         required: false
         type: boolean
 
@@ -48,12 +48,12 @@ jobs:
       run: |
         yarn zip
     
-    - uses: actions/upload-artifact@v3
-      name: Attatch artifacts to job
+    - name: Attatch artifacts to job
+      uses: actions/upload-artifact@v3
       with:
         name: sasesp-plugin-zip-files
         path: ./sasesp-plugin*.zip
-        retention-days: 7
+        retention-days: 14
     
     - name: Bump version and push tag
       if: ${{ inputs.release }}
@@ -70,3 +70,4 @@ jobs:
         name: Release ${{ steps.release_version.outputs.new_tag }}
         body: ${{ steps.release_version.outputs.changelog }}
         artifacts: "./sasesp-plugin*.zip"
+        preRelease: true

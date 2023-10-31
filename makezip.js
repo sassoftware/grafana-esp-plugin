@@ -10,13 +10,3 @@ zip({
   console.error(err.stack);
   process.exit(1);
 });
-
-zip({
-  source: packageJson.name + '-all' + '/*',
-  destination: './' + packageJson.name + '-' + packageJson.version + '-all' + '.zip'
-}).then(function() {
-  console.log('Zip complete.');
-}).catch(function(err) {
-  console.error(err.stack);
-  process.exit(1);
-});
