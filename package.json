@@ -15,7 +15,7 @@
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",
     "typecheck": "tsc --noEmit",
-    "zip": "cp dist sas-esp-grafana-plugin && bestzip sas-esp-grafana-plugin.zip sas-esp-grafana-plugin"
+	"zip": "cp -r dist sasesp-plugin && rm ./sasesp-plugin/*darwin* && rm ./sasesp-plugin/*windows* && rm ./sasesp-plugin/*arm* && cp -r dist sasesp-plugin-all && node makezip.js"
   },
   "license": "Apache-2.0",
   "devDependencies": {
