@@ -50,14 +50,14 @@ jobs:
         retention-days: 7
     
     - name: Bump version and push tag
-      if: startsWith(github.event.head_commit.message, 'release:')
+      if: ${{ inputs.release }}
       id: tag_version
       uses: mathieudutour/github-tag-action@v6.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create a GitHub release
-      if: startsWith(github.event.head_commit.message, 'release:')
+      if: ${{ inputs.release }}
       uses: ncipollo/release-action@v1
       with:
         tag: ${{ steps.tag_version.outputs.new_tag }}
