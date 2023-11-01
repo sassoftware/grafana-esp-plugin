@@ -26,6 +26,7 @@ jobs:
       uses: mathieudutour/github-tag-action@v6.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_release_rules: feat:patch,bump:minor
         dry_run: true
     
     - name: Build yarn
@@ -61,6 +62,7 @@ jobs:
       uses: mathieudutour/github-tag-action@v6.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_release_rules: feat:patch,bump:minor
     
     - name: Create a GitHub release
       if: ${{ inputs.release }}
