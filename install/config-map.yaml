@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-ini
+data:
+  grafana-uaa.ini: |
+    [server]
+    domain = TEMPLATE_ESP_DOMAIN
+    root_url = https://TEMPLATE_ESP_DOMAIN/grafana/
+    serve_from_sub_path = true
+
+    [plugins]
+    allow_loading_unsigned_plugins = sasesp-plugin
+
+    [feature_toggles]
+    accessTokenExpirationCheck = true
+
+    [security]
+    cookie_secure = true
+    cookie_samesite = lax
+
+    [users]
+    auto_assign_org = true
+    auto_assign_org_role = Admin
+
+    [auth]
+    disable_login_form = true
+    signout_redirect_url = https://TEMPLATE_ESP_DOMAIN/oauth2/sign_out?rd=https://TEMPLATE_ESP_DOMAIN/uaa/logout.do?redirect=https://TEMPLATE_ESP_DOMAIN/uaa/login
+
+    [auth.generic_oauth]
+    tls_skip_verify_insecure = true
+    enabled = true
+    name = UAA
+    use_pkce = true
+    auto_login = true
+    client_id = TEMPLATE_OAUTH_CLIENT_ID
+    client_secret = TEMPLATE_OAUTH_CLIENT_SECRET
+    scopes = openid email profile
+    email_attribute_path = email
+    name_attribute_path = user_name
+    login_attribute_path = user_name
+    auth_url = https://TEMPLATE_ESP_DOMAIN/uaa/oauth/authorize
+    token_url = https://TEMPLATE_ESP_DOMAIN/uaa/oauth/token?token_format=jwt
+    api_url = https://TEMPLATE_ESP_DOMAIN/uaa/userinfo
