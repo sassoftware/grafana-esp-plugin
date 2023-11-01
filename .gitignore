@@ -26,3 +26,5 @@
 !/sage
 !/ci
 !/install
+!/docker
+!/snyk

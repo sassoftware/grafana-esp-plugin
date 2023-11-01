@@ -1,0 +1,23 @@
+version: '3'
+
+networks:
+  grafana:
+
+services:
+  grafana-plugin-test:
+    build: .
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - 3000:3000
+      - 3222:3222
+    networks:
+      - grafana
+    container_name: grafana-plugin-test
+    command: --config /var/lib/grafana/config.ini
+
