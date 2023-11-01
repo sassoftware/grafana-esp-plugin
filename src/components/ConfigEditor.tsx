@@ -4,7 +4,7 @@
 */
 
 import React, {PureComponent} from 'react';
-import {InlineLabel, Select} from '@grafana/ui';
+import {Checkbox, InlineLabel, Select, VerticalGroup, HorizontalGroup} from '@grafana/ui';
 import {DataSourcePluginOptionsEditorProps, SelectableValue} from '@grafana/data';
 import { EspDataSourceOptions } from '../types';
 
@@ -67,30 +67,47 @@ export class ConfigEditor extends PureComponent<Props> {
     return this.props.options.url;
   }
 
+  private handleTlsSkipVerifyCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
+    this.changePropOptionsJsonData({tlsSkipVerify: e.currentTarget.checked});
+  }
+
+  private changePropOptionsJsonData(change: Object) {
+    const newJsonData = {
+      ...this.props.options.jsonData,
+      ...change
+    };
+
+    this.props.onOptionsChange({
+      ...this.props.options,
+      jsonData: newJsonData
+    });
+  }
+
   render() {
     return (
-      <div className="gf-form-group">
-        <div className="gf-form">
-          <InlineLabel width="auto">
-            Discovery service provider
-          </InlineLabel>
-          <Select
-              options={[...ConfigEditor.DISCOVERY_DEFAULT_OPTIONS, ...this.state.customOptions]}
-              value={this.state.selectedOption}
-              allowCustomValue
-              onCreateOption={customValue => {
-                const customOption: SelectableValue<string> = {value: customValue, label: customValue};
-                this.setState( (prevState: State) => {
-                  return {
-                    customOptions: [...prevState.customOptions, customOption],
-                  };
-                });
-                this.handleDiscoveryServiceProviderChange(customOption);
-              }}
-              onChange={this.handleDiscoveryServiceProviderChange}
-          />
-        </div>
-      </div>
+        <VerticalGroup>
+          <HorizontalGroup>
+            <InlineLabel width="auto">
+              Discovery service provider
+            </InlineLabel>
+            <Select
+                options={[...ConfigEditor.DISCOVERY_DEFAULT_OPTIONS, ...this.state.customOptions]}
+                value={this.state.selectedOption}
+                allowCustomValue
+                onCreateOption={customValue => {
+                  const customOption: SelectableValue<string> = {value: customValue, label: customValue};
+                  this.setState( (prevState: State) => {
+                    return {
+                      customOptions: [...prevState.customOptions, customOption],
+                    };
+                  });
+                  this.handleDiscoveryServiceProviderChange(customOption);
+                }}
+                onChange={this.handleDiscoveryServiceProviderChange}
+            />
+          </HorizontalGroup>
+          <Checkbox label="(Insecure) Skip TLS certificate verification" value={this.props.options.jsonData.tlsSkipVerify} onChange={this.handleTlsSkipVerifyCheckboxChange}/>
+        </VerticalGroup>
     );
   }
 }
