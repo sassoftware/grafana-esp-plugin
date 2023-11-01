@@ -95,4 +95,5 @@ export function isField(espObject: EspObject | undefined): espObject is Field {
  */
 export interface EspDataSourceOptions extends DataSourceJsonData {
   oauthPassThru: boolean;
+  tlsSkipVerify: boolean;
 }
