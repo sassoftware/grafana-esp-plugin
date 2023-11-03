@@ -3,7 +3,7 @@
 	SPDX-License-Identifier: Apache-2.0
 */
 
-import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 import {Checkbox, HorizontalGroup, InlineLabel, Select, VerticalGroup} from '@grafana/ui';
 import {DataSourcePluginOptionsEditorProps, SelectableValue} from '@grafana/data';
 import {EspDataSourceOptions} from '../types';
@@ -32,15 +32,15 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
         return matchingOption ? matchingOption : {value: discoveryServiceUrl, label: discoveryServiceUrl};
     }
 
-    const changePropOptions = useCallback((change: Object) => {
+    const changePropOptions = (change: Object) => {
         const newOptions = {...options, ...change};
         onOptionsChange(newOptions);
-    }, [options, onOptionsChange])
+    }
 
-    const changePropOptionsJsonData = useCallback((change: Object) => {
+    const changePropOptionsJsonData = (change: Object) => {
         const newJsonData = {...jsonData, ...change};
         changePropOptions({jsonData: newJsonData});
-    }, [changePropOptions, jsonData])
+    }
 
     const handleDiscoveryServiceProviderChange = (selectedOption: SelectableValue<string>) => {
         changePropOptions({url: selectedOption.value});
