@@ -1,4 +1,4 @@
-FROM grafana/grafana:10.0.4-ubuntu
+FROM grafana/grafana:9.5.2-ubuntu
 
 USER root
 WORKDIR /root
