@@ -86,7 +86,7 @@ const config = async (env): Promise<Configuration> => ({
           loader: 'swc-loader',
           options: {
             jsc: {
-              baseUrl: path.resolve(__dirname, 'src'),
+              baseUrl: process.platform === 'win32' ? './src': path.resolve(__dirname, 'src'),
               target: 'es2015',
               loose: false,
               parser: {
