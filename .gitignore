@@ -4,15 +4,16 @@
 # Whitelist our source files and folders
 !/internal/
 !/pkg
-!/.config
+!/src
 
 # Whitelist project files
-!/.gitignore
+!/.config
 !/.eslintrc
+!/.gitignore
 !/.prettierrc.js
 !/CHANGELOG.md
 !/LICENSE
-!/magefile.go
+!/Magefile.go
 !/README.md
 !/go.mod
 !/go.sum
@@ -22,9 +23,14 @@
 !/package.json
 !/tsconfig.json
 !/yarn.lock
-!/src
-!/sage
-!/ci
 !/install
+
 !/docker
-!/snyk
+/docker/dev/data/
+/docker/test/data/
+!/docker/test/data/grafana-oss/plugins/*
+!/docker/test/data/grafana-oss/public/*
+
+!/.vscode
+/.vscode/*
+!/.vscode/launch.json

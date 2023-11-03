@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug in Container",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "remotePath": "/var/lib/grafana/plugins/sasesp-plugin/",
+      "port": 3222,
+      "host": "127.0.0.1",
+      "apiVersion": 2,
+      "trace": "verbose"
+    }
+  ]
+}
