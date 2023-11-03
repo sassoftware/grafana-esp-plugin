@@ -3,111 +3,97 @@
 	SPDX-License-Identifier: Apache-2.0
 */
 
-import React, {PureComponent} from 'react';
-import {Checkbox, InlineLabel, Select, VerticalGroup, HorizontalGroup} from '@grafana/ui';
+import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import {Checkbox, HorizontalGroup, InlineLabel, Select, VerticalGroup} from '@grafana/ui';
 import {DataSourcePluginOptionsEditorProps, SelectableValue} from '@grafana/data';
-import { EspDataSourceOptions } from '../types';
+import {EspDataSourceOptions} from '../types';
 
-interface Props extends DataSourcePluginOptionsEditorProps<EspDataSourceOptions> {}
+ConfigEditor.DISCOVERY_DEFAULT_OPTIONS = [
+    {label: 'SAS Event Stream Manager', value: 'http://sas-event-stream-manager-app/SASEventStreamManager'},
+    {label: 'SAS Event Stream Processing Studio', value: 'http://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio'},
+];
 
-interface State {
-  selectedOption: SelectableValue<string> | undefined;
-  customOptions: Array<SelectableValue<string>>;
-}
+ConfigEditor.DISCOVERY_DEFAULT_VIYA_OPTIONS = [
+    {label: 'SAS Event Stream Manager', value: 'https://sas-event-stream-manager-app/SASEventStreamManager'},
+    {label: 'SAS Event Stream Processing Studio', value: 'https://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio'},
+];
 
-export class ConfigEditor extends PureComponent<Props> {
-  private static DISCOVERY_URL_DEFAULT_STUDIO = 'http://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio';
-  private static DISCOVERY_URL_DEFAULT_ESM = 'http://sas-event-stream-manager-app/SASEventStreamManager';
-  private static DISCOVERY_DEFAULT_OPTIONS = [
-    {label: 'SAS Event Stream Manager', value: ConfigEditor.DISCOVERY_URL_DEFAULT_ESM},
-    {label: 'SAS Event Stream Processing Studio', value: ConfigEditor.DISCOVERY_URL_DEFAULT_STUDIO},
-  ];
+export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptionsEditorProps<EspDataSourceOptions>) {
+    const {jsonData} = options;
 
-  state: State;
+    const getDiscoveryOptions = (isViya: boolean) => isViya ? ConfigEditor.DISCOVERY_DEFAULT_VIYA_OPTIONS : ConfigEditor.DISCOVERY_DEFAULT_OPTIONS;
 
-  constructor(props: Props) {
-    super(props);
+    const deriveSelectedOptionFromUrl = (discoveryServiceUrl: string | null, discoveryOptions: Array<SelectableValue<string>>) => {
+        if (!discoveryServiceUrl) {
+            return null;
+        }
 
-    this.props.options.jsonData.oauthPassThru = true;
-
-    this.state = {
-      selectedOption: undefined,
-      customOptions: [],
-    };
-
-    let discoveryServiceUrl = this.getDiscoveryServiceUrlFromProps();
-    if (!discoveryServiceUrl) {
-      this.state.selectedOption = ConfigEditor.DISCOVERY_DEFAULT_OPTIONS[0];
-    } else {
-      const matchingOption = ConfigEditor.DISCOVERY_DEFAULT_OPTIONS.find(option => option.value === discoveryServiceUrl);
-      if (matchingOption) {
-        this.state.selectedOption = matchingOption;
-      } else {
-        const customOption: SelectableValue<string> = {value: discoveryServiceUrl, label: discoveryServiceUrl};
-        this.state.customOptions = [...this.state.customOptions, customOption];
-        this.state.selectedOption = customOption;
-      }
+        const matchingOption = discoveryOptions.find(option => option.value === discoveryServiceUrl);
+        return matchingOption ? matchingOption : {value: discoveryServiceUrl, label: discoveryServiceUrl};
     }
-    this.setDiscoveryServiceUrlInProps(this.state.selectedOption.value ?? "");
 
-    this.handleDiscoveryServiceProviderChange = this.handleDiscoveryServiceProviderChange.bind(this);
-  }
+    const changePropOptions = useCallback((change: Object) => {
+        const newOptions = {...options, ...change};
+        onOptionsChange(newOptions);
+    }, [options, onOptionsChange])
 
-  private handleDiscoveryServiceProviderChange(selectedOption: SelectableValue<string>) {
-    this.setState({selectedOption: selectedOption});
-    this.setDiscoveryServiceUrlInProps(selectedOption.value ?? "");
-  }
+    const changePropOptionsJsonData = useCallback((change: Object) => {
+        const newJsonData = {...jsonData, ...change};
+        changePropOptions({jsonData: newJsonData});
+    }, [changePropOptions, jsonData])
 
-  private setDiscoveryServiceUrlInProps(newUrl: string) {
-    this.props.options.url = newUrl;
-    this.props.onOptionsChange(this.props.options);
-  }
+    const handleDiscoveryServiceProviderChange = (selectedOption: SelectableValue<string>) => {
+        changePropOptions({url: selectedOption.value});
+    }
 
-  private getDiscoveryServiceUrlFromProps(): string | undefined {
-    return this.props.options.url;
-  }
+    const handleTlsSkipVerifyCheckboxChange = (checked: boolean) => {
+        changePropOptionsJsonData({tlsSkipVerify: checked});
+    }
 
-  private handleTlsSkipVerifyCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
-    this.changePropOptionsJsonData({tlsSkipVerify: e.currentTarget.checked});
-  }
+    const handleViyaCheckboxChange = (checked: boolean) => {
+        const isViya = checked;
+        // Grafana will ignore attempts to reset datasource URLs and will revert to the previously saved value upon a future save, rather than persist a falsy URL.
+        // To prevent this unwanted behaviour, a default URL is chosen to override the existing URL if possible.
+        const defaultUrl = getDiscoveryOptions(isViya)?.at(0)?.value;
+        changePropOptions({
+            url: defaultUrl ?? "",
+            jsonData: {...jsonData, isViya: isViya}
+        });
+    }
 
-  private changePropOptionsJsonData(change: Object) {
-    const newJsonData = {
-      ...this.props.options.jsonData,
-      ...change
-    };
+    const mountEffectRefIsViya = useRef(jsonData.isViya);
+    const mountEffectRefChangePropOptionsJsonData = useRef(changePropOptionsJsonData);
+    useEffect(() => {
+        const isViya = mountEffectRefIsViya.current;
+        const changePropOptionsJsonData = mountEffectRefChangePropOptionsJsonData.current;
 
-    this.props.onOptionsChange({
-      ...this.props.options,
-      jsonData: newJsonData
-    });
-  }
+        changePropOptionsJsonData({oauthPassThru: true});
 
-  render() {
+        if (isViya == null) {
+            (async () => {
+                let isViya: boolean = await fetch(`${window.location.origin}/SASLogon/`).then((response) => response.ok, () => false);
+                changePropOptionsJsonData({isViya: isViya});
+            })();
+        }
+    }, []);
+
+    const discoveryOptions = getDiscoveryOptions(jsonData.isViya);
+    const selectedDiscoveryOption = useMemo(() => deriveSelectedOptionFromUrl(options.url, discoveryOptions), [options.url, discoveryOptions]);
+
     return (
         <VerticalGroup>
-          <HorizontalGroup>
-            <InlineLabel width="auto">
-              Discovery service provider
-            </InlineLabel>
-            <Select
-                options={[...ConfigEditor.DISCOVERY_DEFAULT_OPTIONS, ...this.state.customOptions]}
-                value={this.state.selectedOption}
-                allowCustomValue
-                onCreateOption={customValue => {
-                  const customOption: SelectableValue<string> = {value: customValue, label: customValue};
-                  this.setState( (prevState: State) => {
-                    return {
-                      customOptions: [...prevState.customOptions, customOption],
-                    };
-                  });
-                  this.handleDiscoveryServiceProviderChange(customOption);
-                }}
-                onChange={this.handleDiscoveryServiceProviderChange}
+            <HorizontalGroup>
+                <InlineLabel width="auto">Discovery service provider</InlineLabel>
+                <Checkbox label="Viya" value={jsonData.isViya ?? false} onChange={e => handleViyaCheckboxChange(e.currentTarget.checked)}/>
+                <Select key={`${jsonData.isViya}`}
+                        options={discoveryOptions} value={selectedDiscoveryOption}
+                        allowCustomValue onCreateOption={customValue => handleDiscoveryServiceProviderChange({value: customValue, label: customValue})}
+                        onChange={handleDiscoveryServiceProviderChange}
+                />
+            </HorizontalGroup>
+            <Checkbox label="(Insecure) Skip TLS certificate verification" value={jsonData.tlsSkipVerify ?? false}
+                      onChange={e => handleTlsSkipVerifyCheckboxChange(e.currentTarget.checked)}
             />
-          </HorizontalGroup>
-          <Checkbox label="(Insecure) Skip TLS certificate verification" value={this.props.options.jsonData.tlsSkipVerify} onChange={this.handleTlsSkipVerifyCheckboxChange}/>
         </VerticalGroup>
     );
-  }
 }
