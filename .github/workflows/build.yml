@@ -60,6 +60,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@v0.3.2
       if: ${{ !inputs.release }}
       with:
+        keep_latest: 0
         delete_tags: true
         delete_prerelease_only: true
       env:
