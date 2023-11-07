@@ -43,7 +43,7 @@ Use the provided installation script to install the plug-in:
 
 Prerequisites:
 * You have completed the steps in [Install a Released Version of the Plug-in](#install-a-released-version-of-the-plug-in).
-* Go version 1.19 or above.
+* Go version 1.21 or above.
 * Node version 16 or above.
 * Yarn version 1.22 or above
 
