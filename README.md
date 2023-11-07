@@ -19,13 +19,13 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 
 ## Install a Released Version of the Plug-in
 
-An installation script is provided to install the plug-in and configure Grafana, the installation script will:
- * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to allow grafana to install the plug-in.
- * Configure a new grafana.ini file to enable OAuth authentication.
- * Configure Grafana as an OAuth client with the supported OAuth provider (UAA). Users of Grafana are directed to use the OAuth login page.
- * Optionally install Grafana for you.
+An installation script is provided to install the plug-in and configure Grafana. The installation script performs the following tasks:
+ * Modifies the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable grafana to install the plug-in.
+ * Configures a new `grafana.ini` file to enable OAuth authentication.
+ * Configures Grafana as an OAuth client with the supported OAuth provider (UAA). Users of Grafana are directed to use the OAuth login page.
+ * Optionally installs Grafana for you.
 
-Use the provided installation script to install the plug-in:
+Use the installation script to install the plug-in:
 
 1. Set the correct Kubernetes configuration file for your environment.
    ```
