@@ -19,7 +19,12 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 
 ## Install a Released Version of the Plug-in
 
-Use the provided installation script to install the plug-in:
+An installation script is provided to install the plugin and configure Grafana. The installation script will modify the Grafana deployment by adding an environment variable to enable the plugin
+and configure a new grafana.ini file to enable UAA authentication.
+
+Grafana will be configured as an OAuth client with the supported OAuth provider (UAA), users of Grafana will be directed to use the OAuth login page.
+
+> **Caution**: Running the installation script might overwrite any existing Grafana configuration
 
 1. Set the correct Kubernetes configuration file for your environment.
    ```
@@ -32,7 +37,6 @@ Use the provided installation script to install the plug-in:
 3. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
-   > **Caution**: Running the installation script might overwrite any existing Grafana configuration.
 
    ```
    cd ./install
