@@ -39,7 +39,7 @@ Use the provided installation script to install the plug-in:
    ```
    export DRYRUN=true
    ```
-4Run the installation script, adjusting the command to specify the following variables:
+4. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
    > **Caution**: Running the installation script might overwrite any existing Grafana configuration.
