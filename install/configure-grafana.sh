@@ -13,6 +13,8 @@ ESP_NAMESPACE="${1}"
 ESP_PLUGIN_SOURCE="${2}"
 export ESP_PLUGIN_SOURCE
 
+DRYRUN="${3}"
+
 # Fetch access token to perform admin tasks:
 function fetch_uaa_admin_token() {
     _resp=$(curl "https://${ESP_DOMAIN}/uaa/oauth/token" -s -k -X POST \
@@ -102,16 +104,26 @@ find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_C
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_CLIENT_SECRET/$ENV{"OAUTH_CLIENT_SECRET"}/g' '{}' +
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_ESP_PLUGIN_SOURCE/$ENV{"ESP_PLUGIN_SOURCE"}/g' '{}' +
 
-if [[ "${INSTALL_GRAFANA}" ]]; then
-  echo "Installing grafana"
+if [[ -z "${DRYRUN}" ]]; then
 
-  kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
+  if [[ "${INSTALL_GRAFANA}" ]]; then
+    echo "Installing grafana"
+
+    kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
+  fi
+
+  echo "Applying config-map.yaml"
+
+  kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/config-map.yaml
+
+  echo "Patching deployment/grafana with patch-grafana.yaml"
+
+  kubectl -n "${ESP_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana
+
 fi
 
-echo "Applying config-map.yaml"
-
-kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/config-map.yaml
-
-echo "Patching deployment/grafana with patch-grafana.yaml"
-
-kubectl -n "${ESP_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana
+if [[ "${DRYRUN}" ]]; then
+  echo "Dry run specified. Printing manifests to be applied:"
+  less ./manifests/config-map.yaml
+  less ./manifests/patch-grafana.yaml
+fi

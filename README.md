@@ -19,12 +19,13 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 
 ## Install a Released Version of the Plug-in
 
-An installation script is provided to install the plugin and configure Grafana. The installation script will modify the Grafana deployment by adding an environment variable to enable the plugin
-and configure a new grafana.ini file to enable UAA authentication.
+An installation script is provided to install the plug-in and configure Grafana, the installation script will:
+ * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to allow grafana to install the plug-in.
+ * Configure a new grafana.ini file to enable OAuth authentication.
+ * Configure Grafana as an OAuth client with the supported OAuth provider (UAA). Users of Grafana are directed to use the OAuth login page.
+ * Optionally install Grafana for you.
 
-Grafana will be configured as an OAuth client with the supported OAuth provider (UAA), users of Grafana will be directed to use the OAuth login page.
-
-> **Caution**: Running the installation script might overwrite any existing Grafana configuration
+Use the provided installation script to install the plug-in:
 
 1. Set the correct Kubernetes configuration file for your environment.
    ```
@@ -33,10 +34,15 @@ Grafana will be configured as an OAuth client with the supported OAuth provider 
 2. (Optional) Set an environment variable to enable the script to install Grafana for you.
    ```
    export INSTALL_GRAFANA=true
+
+3. (Optional) Set an environment variable to run the script as a dry run to see the resulting configuration and apply the settings manually.
    ```
-3. Run the installation script, adjusting the command to specify the following variables:
+   export DRYRUN=true
+   ```
+4Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
+   > **Caution**: Running the installation script might overwrite any existing Grafana configuration.
 
    ```
    cd ./install
