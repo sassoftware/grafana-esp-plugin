@@ -15,6 +15,7 @@ export ESP_PLUGIN_SOURCE
 
 DRY_RUN="${DRY_RUN:-false}"
 INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-'9.5.13'}"
 
 # Fetch access token to perform admin tasks:
 function fetch_uaa_admin_token() {
@@ -104,6 +105,7 @@ find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_ESP_DOM
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_CLIENT_ID/$ENV{"OAUTH_CLIENT_ID"}/g' '{}' +
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_CLIENT_SECRET/$ENV{"OAUTH_CLIENT_SECRET"}/g' '{}' +
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_ESP_PLUGIN_SOURCE/$ENV{"ESP_PLUGIN_SOURCE"}/g' '{}' +
+find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_GRAFANA_VERSION/$ENV{"GRAFANA_VERSION"}/g' '{}' +
 
 if [[ "${DRY_RUN}" == true ]]; then
   echo "Dry run specified. Printing manifests to be applied:"

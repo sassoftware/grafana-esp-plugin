@@ -31,7 +31,7 @@ spec:
           - 0
       containers:
         - name: grafana
-          image: docker.io/grafana/grafana:9.4.7
+          image: docker.io/grafana/grafana:TEMPLATE_GRAFANA_VERSION
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
