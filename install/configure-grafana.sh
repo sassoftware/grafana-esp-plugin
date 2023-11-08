@@ -94,7 +94,7 @@ Deploying Grafana with values:
 EOF
 
 echo "Adding Grafana to allowed OAuth client redirects..."
-#add_grafana_auth_redirect
+add_grafana_auth_redirect
 
 echo "Generating manifests..."
 [ -d "./manifests" ] || mkdir "manifests"
