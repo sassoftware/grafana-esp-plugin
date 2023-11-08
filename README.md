@@ -9,7 +9,68 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 
 <img alt="Sailing dashboard" src="img/sailing-dashboard.png"  width="50%" height="50%">
 
-## Prerequisites
+
+## Getting Started
+The following steps provide an example of how to get started with the plug-in. 
+
+### Prerequisites
+Have a running ESP Marketplace deploy.
+
+To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
+
+### Add the SAS Event Stream Processing Data Source
+1. In the **Data Sources** section find and select **SAS Event Stream Processing Data Source**.
+2. In the **Discovery service provider** drop-down select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio**.
+3. Change the value of the **Name** field from SAS Event Stream Processing to either SAS Event Stream Manager or SAS Event Stream Processing Studio, depending on what you selected in the previous step.
+4. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
+5. (Optional) Repeat steps 1-4 to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as a data source too.
+
+### Connect a Panel to SAS Event Stream Processing as a Data Source
+1. Create a new dashboard and add a panel.
+2. In the **Query** tab at the bottom of the panel editor, select the data source that you configured previously.</br>The plug-in discovers running instances of ESP servers by connecting to your chosen data source. When the connection is successful, the **Query** tab shows drop-down menus that are related to SAS Event Stream Processing.
+3. Use the **ESP server** drop-down menu to select the ESP server that you want to query. You can filter the available options by entering a keyword and then selecting the desired ESP server in the drop-down menu.
+4. Use the **ESP project**, **Continuous query**, and **Window** drop-down menus to select appropriate values until you are able to narrow the query down to the desired target window in the ESP project.</br>When an available target window is selected, the plug-in establishes a connection and starts querying for new events.
+5. In the **Fields** drop-down menu, select the fields (from the window in your ESP project) that you want to visualize.
+6. In the top right corner of the screen, if required, change the visualization type from the default of **Time series** to a visualization type that suits your ESP project.
+
+> **Note**: 
+> - You can reuse existing queries across multiple panels, by selecting **--Dashboard--** as a data source and targeting the panel that contains the existing query.
+> - The dashboard that you create references the name of the ESP project. If you rename the ESP project or rename any windows in the ESP project, the dashboard no longer works. As a result, if you want to use the same dashboard with more than one ESP project, you must create a separate dashboard for each project.
+
+### Examples
+
+Some SAS Event Stream Processing Studio examples include Grafana dashboards:
+
+1. In SAS Event Stream Processing Studio, click ![Help](img/icon-helpmenu.png "Help") on any page and select **Examples**.
+
+2. Install the Sailing example or the ONNX example.
+
+3. Run the example in test mode.
+
+4. Download the Grafana dashboard to your computer:
+
+   - [Dashboard for the Sailing example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/sailing#visualizing-objects-in-grafana)
+
+   - [Dashboard for the ONNX example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/onnx_object_detection#visualizing-objects-in-grafana)
+
+5. Import the dashboard to Grafana.
+   
+## Contributing
+
+> We are not currently accepting contributions. 
+
+## License
+
+> This project is licensed under the [Apache 2.0 License](LICENSE).
+
+## Additional Resources
+- [Grafana documentation](https://grafana.com/docs/)
+- [Grafana tutorials](https://grafana.com/tutorials/)
+
+## SAS Internal Deployment Notes
+This section is only relevant to user working for SAS.
+
+### Prerequisites
 
 * Lightweight SAS Event Stream Processing running in Kubernetes with User Account and Authentication (UAA). For more information, see [SAS Event Stream Processing Lightweight Kubernetes](https://github.com/.sassoftware/esp-kubernetes).
 * A Grafana deployment with the name `grafana`, running in the same namespace as lightweight SAS Event Stream Processing.
@@ -17,7 +78,7 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
 * Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 
-## Install a Released Version of the Plug-in
+### Install a Released Version of the Plug-in
 
 An installation script is provided to install the plug-in and configure Grafana. The installation script performs the following tasks:
  * Modifies the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
@@ -49,7 +110,7 @@ Use the installation script to install the plug-in:
    bash configure-grafana.sh <namespace> https://github.com/sassoftware/grafana-esp-plugin/download/<version>/sasesp-plugin-<version>.zip
    ```
 
-## (Optional) Build and Install a Privately Signed Version of the Plug-in
+### (Optional) Build and Install a Privately Signed Version of the Plug-in
 
 Prerequisites:
 * You have completed the steps in [Install a Released Version of the Plug-in](#install-a-released-version-of-the-plug-in).
@@ -101,59 +162,3 @@ To build and install a privately signed version of the plug-in:
     ```
     kubectl -n <namespace> scale deployment grafana --replicas=0
     ```
-
-## Getting Started
-The following steps provide an example of how to get started with the plug-in. 
-
-### Prerequisites
-You must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
-
-### Add the SAS Event Stream Processing Data Source
-1. In the **Data Sources** section find and select **SAS Event Stream Processing Data Source**.
-2. In the **Discovery service provider** drop-down select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio**.
-3. Change the value of the **Name** field from SAS Event Stream Processing to either SAS Event Stream Manager or SAS Event Stream Processing Studio, depending on what you selected in the previous step.
-4. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
-5. (Optional) Repeat steps 1-4 to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as a data source too.
-
-### Connect a Panel to SAS Event Stream Processing as a Data Source
-1. Create a new dashboard and add a panel.
-2. In the **Query** tab at the bottom of the panel editor, select the data source that you configured previously.</br>The plug-in discovers running instances of ESP servers by connecting to your chosen data source. When the connection is successful, the **Query** tab shows drop-down menus that are related to SAS Event Stream Processing.
-3. Use the **ESP server** drop-down menu to select the ESP server that you want to query. You can filter the available options by entering a keyword and then selecting the desired ESP server in the drop-down menu.
-4. Use the **ESP project**, **Continuous query**, and **Window** drop-down menus to select appropriate values until you are able to narrow the query down to the desired target window in the ESP project.</br>When an available target window is selected, the plug-in establishes a connection and starts querying for new events.
-5. In the **Fields** drop-down menu, select the fields (from the window in your ESP project) that you want to visualize.
-6. In the top right corner of the screen, if required, change the visualization type from the default of **Time series** to a visualization type that suits your ESP project.
-
-> **Note**: 
-> - You can reuse existing queries across multiple panels, by selecting **--Dashboard--** as a data source and targeting the panel that contains the existing query.
-> - The dashboard that you create references the name of the ESP project. If you rename the ESP project or rename any windows in the ESP project, the dashboard no longer works. As a result, if you want to use the same dashboard with more than one ESP project, you must create a separate dashboard for each project.
-
-
-### Examples
-
-Some SAS Event Stream Processing Studio examples include Grafana dashboards:
-
-1. In SAS Event Stream Processing Studio, click ![Help](img/icon-helpmenu.png "Help") on any page and select **Examples**.
-
-2. Install the Sailing example or the ONNX example.
-
-3. Run the example in test mode.
-
-4. Download the Grafana dashboard to your computer:
-
-   - [Dashboard for the Sailing example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/sailing#visualizing-objects-in-grafana)
-
-   - [Dashboard for the ONNX example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/onnx_object_detection#visualizing-objects-in-grafana)
-
-5. Import the dashboard to Grafana.
-   
-## Contributing
-
-> We are not currently accepting contributions. 
-
-## License
-
-> This project is licensed under the [Apache 2.0 License](LICENSE).
-
-## Additional Resources
-- [Grafana documentation](https://grafana.com/docs/)
-- [Grafana tutorials](https://grafana.com/tutorials/)
