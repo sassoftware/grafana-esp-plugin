@@ -13,6 +13,9 @@ ESP_NAMESPACE="${1}"
 ESP_PLUGIN_SOURCE="${2}"
 export ESP_PLUGIN_SOURCE
 
+DRY_RUN="${DRY_RUN:-false}"
+INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
+
 # Fetch access token to perform admin tasks:
 function fetch_uaa_admin_token() {
     _resp=$(curl "https://${ESP_DOMAIN}/uaa/oauth/token" -s -k -X POST \
@@ -102,9 +105,17 @@ find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_C
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_CLIENT_SECRET/$ENV{"OAUTH_CLIENT_SECRET"}/g' '{}' +
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_ESP_PLUGIN_SOURCE/$ENV{"ESP_PLUGIN_SOURCE"}/g' '{}' +
 
-if [[ "${INSTALL_GRAFANA}" ]]; then
-  echo "Installing grafana"
+if [[ "${DRY_RUN}" == true ]]; then
+  echo "Dry run specified. Printing manifests to be applied:"
+  echo "./manifests/config-map.yaml"
+  cat ./manifests/config-map.yaml
+  echo "./manifests/patch-grafana.yaml"
+  cat ./manifests/patch-grafana.yaml
+  exit 0
+fi
 
+if [[ "${INSTALL_GRAFANA}" == true ]]; then
+  echo "Installing grafana"
   kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
 fi
 
