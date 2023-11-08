@@ -13,7 +13,8 @@ ESP_NAMESPACE="${1}"
 ESP_PLUGIN_SOURCE="${2}"
 export ESP_PLUGIN_SOURCE
 
-DRYRUN="${3}"
+DRY_RUN="${DRY_RUN:-false}"
+INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 
 # Fetch access token to perform admin tasks:
 function fetch_uaa_admin_token() {
@@ -93,7 +94,7 @@ Deploying Grafana with values:
 EOF
 
 echo "Adding Grafana to allowed OAuth client redirects..."
-add_grafana_auth_redirect
+#add_grafana_auth_redirect
 
 echo "Generating manifests..."
 [ -d "./manifests" ] || mkdir "manifests"
@@ -104,26 +105,24 @@ find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_C
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_OAUTH_CLIENT_SECRET/$ENV{"OAUTH_CLIENT_SECRET"}/g' '{}' +
 find ./manifests/ -type f -name "*.yaml" -exec perl -pi -e 's/\QTEMPLATE_ESP_PLUGIN_SOURCE/$ENV{"ESP_PLUGIN_SOURCE"}/g' '{}' +
 
-if [[ -z "${DRYRUN}" ]]; then
-
-  if [[ "${INSTALL_GRAFANA}" ]]; then
-    echo "Installing grafana"
-
-    kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
-  fi
-
-  echo "Applying config-map.yaml"
-
-  kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/config-map.yaml
-
-  echo "Patching deployment/grafana with patch-grafana.yaml"
-
-  kubectl -n "${ESP_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana
-
-fi
-
-if [[ "${DRYRUN}" ]]; then
+if [[ "${DRY_RUN}" == true ]]; then
   echo "Dry run specified. Printing manifests to be applied:"
-  less ./manifests/config-map.yaml
-  less ./manifests/patch-grafana.yaml
+  echo "./manifests/config-map.yaml"
+  cat ./manifests/config-map.yaml
+  echo "./manifests/patch-grafana.yaml"
+  cat ./manifests/patch-grafana.yaml
+  exit 0
 fi
+
+if [[ "${INSTALL_GRAFANA}" == true ]]; then
+  echo "Installing grafana"
+  kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
+fi
+
+echo "Applying config-map.yaml"
+
+kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/config-map.yaml
+
+echo "Patching deployment/grafana with patch-grafana.yaml"
+
+kubectl -n "${ESP_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana

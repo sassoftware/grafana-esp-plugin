@@ -37,7 +37,7 @@ Use the installation script to install the plug-in:
 
 3. (Optional) Set an environment variable to run the script as a dry run to see the resulting configuration and apply the settings manually.
    ```
-   export DRYRUN=true
+   export DRY_RUN=true
    ```
 4. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
