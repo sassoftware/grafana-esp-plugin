@@ -69,7 +69,7 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards:
 - [Grafana tutorials](https://grafana.com/tutorials/)
 
 ## SAS Internal Deployment Notes
-This section is only relevant to user working for SAS.
+This section is relevant only to internal users at SAS.
 
 ### Prerequisites
 
