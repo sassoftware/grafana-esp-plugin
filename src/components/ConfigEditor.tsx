@@ -29,7 +29,7 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
         }
 
         const matchingOption = discoveryOptions.find(option => option.value === discoveryServiceUrl);
-        return matchingOption ? matchingOption : {value: discoveryServiceUrl, label: discoveryServiceUrl};
+        return matchingOption ?? {value: discoveryServiceUrl, label: discoveryServiceUrl};
     }
 
     const changePropOptions = (change: Object) => {
@@ -64,17 +64,21 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
     const mountEffectRefIsViya = useRef(jsonData.isViya);
     const mountEffectRefChangePropOptionsJsonData = useRef(changePropOptionsJsonData);
     useEffect(() => {
-        const isViya = mountEffectRefIsViya.current;
-        const changePropOptionsJsonData = mountEffectRefChangePropOptionsJsonData.current;
+        (async () => {
+            const isViya = mountEffectRefIsViya.current;
+            const changePropOptionsJsonData = mountEffectRefChangePropOptionsJsonData.current;
 
-        changePropOptionsJsonData({oauthPassThru: true});
+            let jsonDataChanges = new Map<string, Object>();
+            jsonDataChanges.set("oauthPassThru", true);
 
-        if (isViya == null) {
-            (async () => {
+            if (isViya == null) {
                 let isViya: boolean = await fetch(`${window.location.origin}/SASLogon/`).then((response) => response.ok, () => false);
-                changePropOptionsJsonData({isViya: isViya});
-            })();
-        }
+                jsonDataChanges.set("isViya", isViya);
+            }
+
+            const jsonDataDelta = Object.fromEntries(jsonDataChanges);
+            changePropOptionsJsonData(jsonDataDelta);
+        })()
     }, []);
 
     const discoveryOptions = getDiscoveryOptions(jsonData.isViya);

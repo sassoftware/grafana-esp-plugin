@@ -60,11 +60,18 @@ func NewSampleDatasource(ctx context.Context, settings backend.DataSourceInstanc
 		return nil, fmt.Errorf("httpclient new: %w", err)
 	}
 
+	var jsonData datasourceJsonData
+	err = json.Unmarshal(settings.JSONData, &jsonData)
+	if err != nil {
+		return nil, err
+	}
+
 	log.DefaultLogger.Debug(fmt.Sprintf("created data source with ForwardHTTPHeaders option set to: %v", opts.ForwardHTTPHeaders))
 
 	return &SampleDatasource{
 		channelQueryStore: channelquerystore.New(),
 		httpClient:        cl,
+		jsonData:          jsonData,
 	}, nil
 }
 
@@ -73,6 +80,13 @@ func NewSampleDatasource(ctx context.Context, settings backend.DataSourceInstanc
 type SampleDatasource struct {
 	channelQueryStore *channelquerystore.ChannelQueryStore
 	httpClient        *http.Client
+	jsonData          datasourceJsonData
+}
+
+type datasourceJsonData struct {
+	IsViya        bool `json:"isViya"`
+	OauthPassThru bool `json:"oauthPassThru"`
+	TlsSkipVerify bool `json:"tlsSkipVerify"`
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -180,8 +194,16 @@ func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHe
 	case 200:
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusOk,
-			Message: "The backend got a success response from the discovery service",
+			Message: "Connection successful",
 		}, nil
+	case 401:
+		var message = fmt.Sprintf("Connection rejected due to unauthorized credentials")
+		var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
+		log.DefaultLogger.Debug("Discovery service authorization failure",
+			"authorizationHeaderPresent", hasAuthHeader,
+			"oauthPassThru", d.jsonData.OauthPassThru,
+		)
+		return newCheckHealthErrorResponse(message), nil
 	default:
 		var message = fmt.Sprintf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
 		return newCheckHealthErrorResponse(message), nil
