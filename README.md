@@ -14,7 +14,8 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 The following steps provide an example of how to get started with the plug-in. 
 
 ### Prerequisites
-Have a running ESP Marketplace deploy.
+* A running deployment of SAS Event Stream Processing in the Microsoft Azure Marketplace.
+* An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
 
