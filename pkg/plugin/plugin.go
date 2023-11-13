@@ -337,6 +337,22 @@ func (d *SampleDatasource) PublishStream(_ context.Context, _ *backend.PublishSt
 	}, nil
 }
 
+type callResourceResponseBody struct {
+	Error *string         `json:"error,omitempty"`
+	Data  json.RawMessage `json:"data,omitempty"`
+}
+
+func newSerializedCallResourceResponseErrorBody(errorMessage string) []byte {
+	errorResponseBody, err := json.Marshal(callResourceResponseBody{
+		Error: &errorMessage,
+	})
+	if err != nil {
+		errorResponseBody = []byte(`{error:"Internal server error"}`)
+	}
+
+	return errorResponseBody
+}
+
 func (d *SampleDatasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
 	var response = &backend.CallResourceResponse{
 		Status:  http.StatusNotFound,
@@ -354,16 +370,25 @@ func (d *SampleDatasource) CallResource(ctx context.Context, req *backend.CallRe
 		discoveryResponse, err = callDiscoveryEndpoint(ctx, d.httpClient, *discoveryServiceUrl)
 		if err != nil {
 			errorMessage := "Unable to obtain ESP server schema information."
-			response.Body = []byte(errorMessage)
+			response.Body = newSerializedCallResourceResponseErrorBody(errorMessage)
 			response.Status = http.StatusInternalServerError
 			log.DefaultLogger.Error(errorMessage, "error", err)
 			return sender.Send(response)
 		}
 
-		responseBody, err := io.ReadAll(discoveryResponse.Body)
+		servers, err := io.ReadAll(discoveryResponse.Body)
 		if err != nil {
 			errorMessage := "Unable to read discovery response."
-			response.Body = []byte(errorMessage)
+			response.Body = newSerializedCallResourceResponseErrorBody(errorMessage)
+			response.Status = http.StatusInternalServerError
+			log.DefaultLogger.Error(errorMessage, "error", err)
+			return sender.Send(response)
+		}
+
+		responseBody, err := json.Marshal(callResourceResponseBody{Data: servers})
+		if err != nil {
+			errorMessage := "Unable to serialize discovery response."
+			response.Body = newSerializedCallResourceResponseErrorBody(errorMessage)
 			response.Status = http.StatusInternalServerError
 			log.DefaultLogger.Error(errorMessage, "error", err)
 			return sender.Send(response)
@@ -371,8 +396,6 @@ func (d *SampleDatasource) CallResource(ctx context.Context, req *backend.CallRe
 
 		response.Status = http.StatusOK
 		response.Body = responseBody
-		response.Headers["Content-Encoding"] = []string{discoveryResponse.Header.Get("Content-Encoding")}
-		response.Headers["Content-Type"] = []string{discoveryResponse.Header.Get("Content-Type")}
 	default:
 		break
 	}

@@ -204,7 +204,7 @@ func (espWsClient *EspWsClient) handleBulkMessage(encodedMessages *[]string) {
 		var message messagedto.MessageDTO
 		err = json.Unmarshal(*decodedMessage, &message)
 		if err != nil {
-			log.DefaultLogger.Error(fmt.Sprintf("Cannot unmarshal message: %v", message))
+			log.DefaultLogger.Error(fmt.Sprintf("Cannot unmarshal message: %s", *decodedMessage))
 			return
 		}
 

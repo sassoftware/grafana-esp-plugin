@@ -22,6 +22,10 @@ import {
 
 type Props = QueryEditorProps<DataSource, EspQuery, EspDataSourceOptions>;
 
+interface ServersResponse {
+  data: Server[]
+}
+
 interface State {
   isServerDataFetched: boolean;
   serverOptions: Array<SelectableEspObject<Server>>;
@@ -63,8 +67,9 @@ export class QueryEditor extends PureComponent<Props> {
   componentDidMount() {
     this.props.datasource
       .getResource('servers')
-      .then(async (serversResponse: Server[]) => {
-        const [server, project, cq, window, fields] = QueryEditor.deriveSelectionsFromQuery(serversResponse, this.props.query);
+      .then(async (serversResponse: ServersResponse) => {
+        const servers = serversResponse.data
+        const [server, project, cq, window, fields] = QueryEditor.deriveSelectionsFromQuery(servers, this.props.query);
         await this.setStateWithPromise({
           selectedServer: server,
           selectedProject: project,
@@ -72,7 +77,7 @@ export class QueryEditor extends PureComponent<Props> {
           selectedWindow: window,
           selectedFields: fields
         });
-        await this.updateServers(serversResponse);
+        await this.updateServers(servers);
         await this.setStateWithPromise({ isServerDataFetched: true });
       })
       .catch(console.error);
