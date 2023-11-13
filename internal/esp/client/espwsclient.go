@@ -93,7 +93,7 @@ func New(wsConnectionUrl url.URL) *EspWsClient {
 		var message messagedto.MessageDTO
 		err := json.Unmarshal(messageBytes, &message)
 		if err != nil {
-			log.DefaultLogger.Error(fmt.Sprintf("Cannot unmarshal messageString: %v", message))
+			log.DefaultLogger.Error(fmt.Sprintf("Cannot unmarshal messageString: %s", messageString))
 			return
 		}
 
