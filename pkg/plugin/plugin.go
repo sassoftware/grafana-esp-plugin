@@ -10,15 +10,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"grafana-esp-plugin/internal/plugin/syncmap"
 	"io"
-
 	"net/http"
 	"net/url"
 
 	"grafana-esp-plugin/internal/esp/client"
 	"grafana-esp-plugin/internal/esp/windowevent"
 	"grafana-esp-plugin/internal/framefactory"
-	"grafana-esp-plugin/internal/plugin/channelquerystore"
 	"grafana-esp-plugin/internal/plugin/query"
 	"grafana-esp-plugin/internal/plugin/querydto"
 	"grafana-esp-plugin/internal/plugin/server"
@@ -69,18 +68,18 @@ func NewSampleDatasource(ctx context.Context, settings backend.DataSourceInstanc
 	log.DefaultLogger.Debug(fmt.Sprintf("created data source with ForwardHTTPHeaders option set to: %v", opts.ForwardHTTPHeaders))
 
 	return &SampleDatasource{
-		channelQueryStore: channelquerystore.New(),
-		httpClient:        cl,
-		jsonData:          jsonData,
+		channelQueryMap: syncmap.New[string, query.Query](),
+		httpClient:      cl,
+		jsonData:        jsonData,
 	}, nil
 }
 
 // SampleDatasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type SampleDatasource struct {
-	channelQueryStore *channelquerystore.ChannelQueryStore
-	httpClient        *http.Client
-	jsonData          datasourceJsonData
+	channelQueryMap *syncmap.SyncMap[string, query.Query]
+	httpClient      *http.Client
+	jsonData        datasourceJsonData
 }
 
 type datasourceJsonData struct {
@@ -131,7 +130,7 @@ func (d *SampleDatasource) query(_ context.Context, datasourceUid string, queryJ
 		return handleQueryError("invalid channel path", err)
 	}
 
-	d.channelQueryStore.Store(*channelPath, q)
+	d.channelQueryMap.Set(*channelPath, q)
 
 	log.DefaultLogger.Debug("Received query", "path", *channelPath)
 
@@ -224,7 +223,7 @@ func (d *SampleDatasource) SubscribeStream(_ context.Context, req *backend.Subsc
 
 	status := backend.SubscribeStreamStatusPermissionDenied
 
-	if _, err := d.channelQueryStore.Load(req.Path); err == nil {
+	if _, err := d.channelQueryMap.Get(req.Path); err == nil {
 		// Allow subscribing only on expected path.
 		status = backend.SubscribeStreamStatusOK
 	}
@@ -241,7 +240,7 @@ func (d *SampleDatasource) RunStream(ctx context.Context, req *backend.RunStream
 
 	queryKey := req.Path
 
-	q, err := d.channelQueryStore.Load(queryKey)
+	q, err := d.channelQueryMap.Get(queryKey)
 	if err != nil {
 		// The channel refers to an unknown query.
 		// Avoid returning the error, to prevent continuous attempts from Grafana to re-establish the stream.
@@ -299,7 +298,7 @@ func (d *SampleDatasource) RunStream(ctx context.Context, req *backend.RunStream
 			log.DefaultLogger.Debug("Context done, finish streaming", "path", req.Path)
 
 			// Free the stored query if present.
-			d.channelQueryStore.Delete(queryKey)
+			d.channelQueryMap.Delete(queryKey)
 
 			return nil
 		case err := <-espWsClient.Errors:
