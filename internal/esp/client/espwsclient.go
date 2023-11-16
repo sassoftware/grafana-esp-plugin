@@ -71,16 +71,28 @@ func New(wsConnectionUrl url.URL) *EspWsClient {
 		Errors:        make(chan error),
 	}
 
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.DefaultLogger.Debug(fmt.Sprintf("Opened WebSocket: %s", socket.Url))
-	}
+	socket.OnConnected = handleConnect
+	socket.OnConnectError = getConnectionErrorHandler(&espWsClient)
+	socket.OnTextMessage = getTextMessageHandler(&espWsClient)
+	socket.OnBinaryMessage = getBinaryMessageHandler(&espWsClient)
+	socket.OnDisconnected = getDisconnectHandler(&espWsClient)
 
-	socket.OnConnectError = func(err error, socket gowebsocket.Socket) {
+	return &espWsClient
+}
+
+func handleConnect(socket gowebsocket.Socket) {
+	log.DefaultLogger.Debug(fmt.Sprintf("Opened WebSocket: %s", socket.Url))
+}
+
+func getConnectionErrorHandler(espWsClient *EspWsClient) func(err error, socket gowebsocket.Socket) {
+	return func(err error, socket gowebsocket.Socket) {
 		log.DefaultLogger.Error(fmt.Sprintf("WebSocket error: %s, %s", socket.Url, err))
 		espWsClient.handleConnectionError()
 	}
+}
 
-	socket.OnTextMessage = func(messageString string, socket gowebsocket.Socket) {
+func getTextMessageHandler(espWsClient *EspWsClient) func(messageString string, socket gowebsocket.Socket) {
+	return func(messageString string, socket gowebsocket.Socket) {
 		if !espWsClient.isConnected {
 			isHandshakeMessage := !espWsClient.isConnected && strings.HasPrefix(messageString, "status: 200\n")
 			if isHandshakeMessage {
@@ -99,8 +111,10 @@ func New(wsConnectionUrl url.URL) *EspWsClient {
 
 		espWsClient.handleMessage(message, messageBytes)
 	}
+}
 
-	socket.OnBinaryMessage = func(data []byte, socket gowebsocket.Socket) {
+func getBinaryMessageHandler(espWsClient *EspWsClient) func(data []byte, socket gowebsocket.Socket) {
+	return func(data []byte, socket gowebsocket.Socket) {
 		if !espWsClient.isConnected {
 			messageString := string(data)[:]
 			isHandshakeMessage := !espWsClient.isConnected && strings.HasPrefix(messageString, "status: 200\n")
@@ -129,8 +143,10 @@ func New(wsConnectionUrl url.URL) *EspWsClient {
 
 		espWsClient.handleMessage(*message, data)
 	}
+}
 
-	socket.OnDisconnected = func(err error, socket gowebsocket.Socket) {
+func getDisconnectHandler(espWsClient *EspWsClient) func(err error, socket gowebsocket.Socket) {
+	return func(err error, socket gowebsocket.Socket) {
 		log.DefaultLogger.Debug(fmt.Sprintf("WebSocket closed: %v, %v", socket.Url, err))
 		espWsClient.handleConnectionClosed()
 
@@ -138,8 +154,10 @@ func New(wsConnectionUrl url.URL) *EspWsClient {
 			espWsClient.handleConnectionError()
 		}
 	}
+}
 
-	return &espWsClient
+func (espWsClient *EspWsClient) handleDisconnect() {
+	espWsClient.socket.Connect()
 }
 
 func (espWsClient *EspWsClient) Connect() {
