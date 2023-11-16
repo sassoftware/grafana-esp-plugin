@@ -413,6 +413,13 @@ func callDiscoveryEndpoint(ctx context.Context, httpClient *http.Client, discove
 		return nil, err
 	}
 
+	if request.Header.Get("Accept-Encoding") == "" {
+		// Grafana (as of version 9.x) contains a bug where it will enable compression by adding an explicit Accept-Encoding header by default if missing,
+		// but not properly handle decompression of any compressed response.
+		// The header set explicitly here as a workaround for this bug.
+		request.Header.Set("Accept-Encoding", "identity")
+	}
+
 	resp, err := httpClient.Do(request)
 	if err != nil {
 		log.DefaultLogger.Error("Unable to receive discovery response.", "error", err)
