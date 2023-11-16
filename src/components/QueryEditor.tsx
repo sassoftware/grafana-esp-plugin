@@ -192,7 +192,7 @@ export class QueryEditor extends PureComponent<Props> {
       case EspObjectType.CONTINUOUS_QUERY:
         await this.setSelectedWindow(null);
       case EspObjectType.WINDOW:
-        await this.setSelectedFields([]);
+        await this.setSelectedFields(null);
       case EspObjectType.FIELD:
         break;
     }
@@ -328,11 +328,13 @@ export class QueryEditor extends PureComponent<Props> {
     }
   }
 
-  async setSelectedFields(fields: Field[]) {
-    await this.setStateWithPromise({selectedFields: fields})
+  async setSelectedFields(fields: Field[] | null) {
+    await this.setStateWithPromise({selectedFields: fields ?? []})
 
-    this.espQueryController.save();
-    this.espQueryController.execute();
+    if (fields != null) {
+      this.espQueryController.save();
+      this.espQueryController.execute();
+    }
   }
 
   private setStateWithPromise(stateDiff: {}): Promise<void> {
