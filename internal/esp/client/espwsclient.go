@@ -61,8 +61,11 @@ const (
 const jsonFormat string = "json"
 const cborFormat string = "cbor"
 
-func New(wsConnectionUrl url.URL) *EspWsClient {
+func New(wsConnectionUrl url.URL, authorizationHeader *string) *EspWsClient {
 	socket := gowebsocket.New(wsConnectionUrl.String())
+	if authorizationHeader != nil {
+		socket.RequestHeader.Set("Authorization", *authorizationHeader)
+	}
 
 	espWsClient := EspWsClient{
 		socket:        &socket,

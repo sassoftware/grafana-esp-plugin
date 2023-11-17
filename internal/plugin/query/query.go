@@ -18,24 +18,26 @@ import (
 const CHANNEL_PATH_REGEX_PATTERN string = `^[A-z0-9_\-/=.]*$`
 
 type Query struct {
-	ServerUrl     url.URL
-	ProjectName   string
-	CqName        string
-	WindowName    string
-	Fields        []string
-	EventInterval uint64
-	MaxEvents     uint64
+	ServerUrl           url.URL
+	ProjectName         string
+	CqName              string
+	WindowName          string
+	Fields              []string
+	EventInterval       uint64
+	MaxEvents           uint64
+	AuthorizationHeader *string
 }
 
-func New(s server.Server, projectName string, cqName string, windowName string, interval uint64, maxEvents uint64, fields []string) *Query {
+func New(s server.Server, projectName string, cqName string, windowName string, interval uint64, maxEvents uint64, fields []string, authorizationHeader *string) *Query {
 	return &Query{
-		ServerUrl:     s.GetUrl(),
-		ProjectName:   projectName,
-		CqName:        cqName,
-		WindowName:    windowName,
-		EventInterval: interval,
-		MaxEvents:     maxEvents,
-		Fields:        fields,
+		ServerUrl:           s.GetUrl(),
+		ProjectName:         projectName,
+		CqName:              cqName,
+		WindowName:          windowName,
+		EventInterval:       interval,
+		MaxEvents:           maxEvents,
+		Fields:              fields,
+		AuthorizationHeader: authorizationHeader,
 	}
 }
 
