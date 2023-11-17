@@ -41,3 +41,18 @@ func TestGetDeletedString(t *testing.T) {
 		t.Errorf("expected %v, got %v", nil, outputValuePtr)
 	}
 }
+
+func TestSetNilString(t *testing.T) {
+	s := New[string, string]()
+
+	s.Set("foo", nil)
+
+	outputValuePtr, err := s.Get("foo")
+	if err == nil {
+		t.Errorf("expected non-nil error")
+	}
+
+	if outputValuePtr != nil {
+		t.Errorf("expected %v, got %v", nil, outputValuePtr)
+	}
+}

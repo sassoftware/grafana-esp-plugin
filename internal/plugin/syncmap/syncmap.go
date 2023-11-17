@@ -28,17 +28,22 @@ func (s *SyncMap[K, V]) Delete(key K) {
 	s.lock.Unlock()
 }
 
-func (s *SyncMap[K, V]) Set(key K, q *V) {
+func (s *SyncMap[K, V]) Set(key K, value *V) {
+	if value == nil {
+		s.Delete(key)
+		return
+	}
+
 	s.lock.Lock()
-	s.syncMap[key] = q
+	s.syncMap[key] = value
 	s.lock.Unlock()
 }
 
 func (s *SyncMap[K, V]) Get(key K) (*V, error) {
-	q, found := s.syncMap[key]
+	value, found := s.syncMap[key]
 	if !found {
 		return nil, fmt.Errorf("value not found for key: %v", key)
 	}
 
-	return q, nil
+	return value, nil
 }
