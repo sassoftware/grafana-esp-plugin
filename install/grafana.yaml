@@ -106,4 +106,4 @@ spec:
   tls:
   - hosts:
     - "TEMPLATE_ESP_DOMAIN"
-    secretName: foo
+    secretName: TEMPLATE_OAUTH_CLIENT_SECRET
