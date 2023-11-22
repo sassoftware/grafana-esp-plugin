@@ -5,8 +5,8 @@ metadata:
 data:
   grafana-uaa.ini: |
     [server]
-    domain = TEMPLATE_ESP_DOMAIN
-    root_url = https://TEMPLATE_ESP_DOMAIN/grafana/
+    domain = TEMPLATE_GRAFANA_DOMAIN
+    root_url = https://TEMPLATE_GRAFANA_DOMAIN/grafana/
     serve_from_sub_path = true
 
     [plugins]
@@ -16,6 +16,7 @@ data:
     accessTokenExpirationCheck = true
 
     [security]
+    disable_initial_admin_creation = true
     cookie_secure = true
     cookie_samesite = lax
 
@@ -25,12 +26,12 @@ data:
 
     [auth]
     disable_login_form = true
-    signout_redirect_url = https://TEMPLATE_ESP_DOMAIN/oauth2/sign_out?rd=https://TEMPLATE_ESP_DOMAIN/uaa/logout.do?redirect=https://TEMPLATE_ESP_DOMAIN/uaa/login
+    signout_redirect_url = TEMPLATE_SIGNOUT_REDIRECT_URL
 
     [auth.generic_oauth]
     tls_skip_verify_insecure = true
     enabled = true
-    name = UAA
+    name = OAuth
     use_pkce = true
     auto_login = true
     client_id = TEMPLATE_OAUTH_CLIENT_ID
@@ -39,6 +40,9 @@ data:
     email_attribute_path = email
     name_attribute_path = user_name
     login_attribute_path = user_name
-    auth_url = https://TEMPLATE_ESP_DOMAIN/uaa/oauth/authorize
-    token_url = https://TEMPLATE_ESP_DOMAIN/uaa/oauth/token?token_format=jwt
-    api_url = https://TEMPLATE_ESP_DOMAIN/uaa/userinfo
+    auth_url = TEMPLATE_AUTH_URL
+    token_url = TEMPLATE_TOKEN_URL
+    api_url = TEMPLATE_API_URL
+    allow_assign_grafana_admin = true
+    role_attribute_path = contains(grafana_roles[*], 'grafana-admin') && 'GrafanaAdmin' || contains(grafana_roles[*], 'admin') && 'Admin' || contains(grafana_roles[*], 'editor') && 'Editor' || 'Viewer'
+
