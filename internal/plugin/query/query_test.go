@@ -6,6 +6,7 @@
 package query
 
 import (
+	"grafana-esp-plugin/internal/plugin/server"
 	"testing"
 )
 
@@ -15,68 +16,30 @@ type equalityAssertion struct {
 }
 
 func createQuery(t *testing.T) Query {
-	channelPath := "stream/wss/host/12345/project/cq/window"
-
-	q, err := FromChannelPath(channelPath)
+	s, err := server.FromUrlString("wss://host:12345")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
+
+	q := New(*s, "project", "cq", "window", 1, 2, []string{}, nil)
 
 	return *q
 }
 
-func TestQueryFromChannelPath(t *testing.T) {
-	q := createQuery(t)
-
-	equalityAssertions := []equalityAssertion{
-		{"wss", q.ServerUrl.Scheme},
-		{"host:12345", q.ServerUrl.Host},
-		{"project", q.ProjectName},
-		{"cq", q.CqName},
-		{"window", q.WindowName},
-	}
-
-	for _, equalityAssertion := range equalityAssertions {
-		expected := equalityAssertion.Expected
-		actual := equalityAssertion.Actual
-
-		if expected != actual {
-			t.Errorf("expected %v, got %v", expected, actual)
-		}
-	}
-}
-
-func TestQueryFromChannelPathError(t *testing.T) {
-	invalidChannelPaths := []string{
-		"foo/wss/host/12345/project/cq/window",
-		"stream/wss/host/12345/project/cq",
-		"stream/wss/host/12345/project/cq/window/foo",
-		"stream/wss/host/65536/project/cq/window",
-		"stream/wss/%%%/12345/project/cq/window",
-	}
-
-	for _, channelPath := range invalidChannelPaths {
-		q, err := FromChannelPath(channelPath)
-		if err == nil {
-			t.Errorf("expected error, got %v", err)
-		}
-
-		if q != nil {
-			t.Errorf("expected nil, got %v", q)
-		}
-	}
-}
-
 func TestQueryToChannelPath(t *testing.T) {
-	q := createQuery(t)
+	q1 := createQuery(t)
 
-	cp, err := q.ToChannelPath()
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
+	q2 := createQuery(t)
+	authHeader := "Bearer foo"
+	q2.AuthorizationHeader = &authHeader
+	
+	q3 := createQuery(t)
+	q3.ProjectName = "foo"
 
 	equalityAssertions := []equalityAssertion{
-		{"stream/wss/host/12345/project/cq/window", *cp},
+		{"stream/408e4ac72d899e96e5d777c2e9e74939a6257a15d2b365d55221763589b03c4e", q1.ToChannelPath()},
+		{"stream/408e4ac72d899e96e5d777c2e9e74939a6257a15d2b365d55221763589b03c4e", q2.ToChannelPath()},
+		{"stream/025b476e61af885aa2b86c50a37da4411d92ac1cc6a8956171145ccb9812aca8", q3.ToChannelPath()},
 	}
 
 	for _, equalityAssertion := range equalityAssertions {
@@ -86,19 +49,5 @@ func TestQueryToChannelPath(t *testing.T) {
 		if expected != actual {
 			t.Errorf("expected %v, got %v", expected, actual)
 		}
-	}
-}
-
-func TestQueryToChannelPathError(t *testing.T) {
-	q := createQuery(t)
-	q.ProjectName = "../project"
-
-	cp, err := q.ToChannelPath()
-	if err == nil {
-		t.Errorf("expected error, got: %v", err)
-	}
-
-	if cp != nil {
-		t.Errorf("expected nil, got %v", cp)
 	}
 }

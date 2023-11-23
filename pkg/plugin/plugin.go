@@ -149,14 +149,11 @@ func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto q
 
 	q := query.New(*s, qdto.ProjectName, qdto.CqName, qdto.WindowName, qdto.Interval, qdto.MaxDataPoints, qdto.Fields, authorizationHeader)
 
-	channelPath, err := q.ToChannelPath()
-	if err != nil {
-		return handleQueryError("invalid channel path", err)
-	}
+	channelPath := q.ToChannelPath()
 
-	d.channelQueryMap.Set(*channelPath, q)
+	d.channelQueryMap.Set(channelPath, q)
 
-	log.DefaultLogger.Debug("Received query", "path", *channelPath)
+	log.DefaultLogger.Debug("Received query", "path", channelPath)
 
 	// If query called with streaming on then return a channel
 	// to subscribe on a client-side and consume updates from a plugin.
@@ -165,7 +162,7 @@ func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto q
 	channel := live.Channel{
 		Scope:     live.ScopeDatasource,
 		Namespace: datasourceUid,
-		Path:      *channelPath,
+		Path:      channelPath,
 	}
 
 	frame := data.NewFrame("response")

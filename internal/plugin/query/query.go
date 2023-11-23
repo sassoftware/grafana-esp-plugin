@@ -6,16 +6,14 @@
 package query
 
 import (
-	"errors"
+	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"grafana-esp-plugin/internal/plugin/server"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 )
-
-const CHANNEL_PATH_REGEX_PATTERN string = `^[A-z0-9_\-/=.]*$`
 
 type Query struct {
 	ServerUrl           url.URL
@@ -41,72 +39,23 @@ func New(s server.Server, projectName string, cqName string, windowName string, 
 	}
 }
 
-func FromChannelPath(channelPath string) (*Query, error) {
-	splitChannelPath := strings.Split(channelPath, "/")
-	if len(splitChannelPath) < 7 {
-		return nil, errors.New("invalid stream channel path length received")
-	}
-	channelType := splitChannelPath[0]
-	if channelType != "stream" {
-		return nil, errors.New("invalid stream channel path type received")
-	}
-	scheme := splitChannelPath[1]
-	host := splitChannelPath[2]
-	portString := splitChannelPath[3]
-	projectName := splitChannelPath[4]
-	cqName := splitChannelPath[5]
-	windowName := splitChannelPath[6]
-	intervalString := splitChannelPath[7]
-	maxEventsString := splitChannelPath[8]
-	fields := splitChannelPath[9:]
-
-	port, err := strconv.ParseUint(portString, 10, 16)
-	if err != nil {
-		return nil, err
-	}
-	isTls := scheme == "wss"
-	server, err := server.New(isTls, host, uint16(port))
-	if err != nil {
-		return nil, err
-	}
-	serverUrl := server.GetUrl()
-	interval, err := strconv.ParseUint(intervalString, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-	maxEvents, err := strconv.ParseUint(maxEventsString, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Query{
-		ServerUrl:     serverUrl,
-		ProjectName:   projectName,
-		CqName:        cqName,
-		WindowName:    windowName,
-		EventInterval: interval,
-		MaxEvents:     maxEvents,
-		Fields:        fields,
-	}, nil
+func (q *Query) ToChannelPath() string {
+	hashString := q.calcHashString()
+	channelPath := fmt.Sprintf("stream/%s", hashString)
+	return channelPath
 }
 
-func (q Query) ToChannelPath() (*string, error) {
-	channelPath := fmt.Sprintf("stream/%s/%s/%s/%s/%s/%s/%d/%d/%s",
-		url.PathEscape(q.ServerUrl.Scheme),
-		url.PathEscape(q.ServerUrl.Hostname()),
-		q.ServerUrl.Port(),
-		url.PathEscape(q.ProjectName),
-		url.PathEscape(q.CqName),
-		url.PathEscape(q.WindowName),
-		q.EventInterval,
-		q.MaxEvents,
-		strings.Join(q.Fields, "/"),
-	)
+func (q *Query) calcHashString() string {
+	b := bytes.Join([][]byte{
+		[]byte(q.ServerUrl.String()),
+		[]byte(q.ProjectName),
+		[]byte(q.CqName),
+		[]byte(q.WindowName),
+		[]byte(strconv.Itoa(int(q.EventInterval))),
+		[]byte(strconv.Itoa(int(q.MaxEvents))),
+		[]byte(strings.Join(q.Fields, "/")),
+	}, []byte{0})
+	hashSum := sha256.Sum256(b)
 
-	// The Channel class depends on its path matching this arbitrary regex, so validate it here and prevent silent failures.
-	if !regexp.MustCompile(CHANNEL_PATH_REGEX_PATTERN).MatchString(channelPath) {
-		return nil, fmt.Errorf(`channel path "%s" must match %s pattern`, channelPath, CHANNEL_PATH_REGEX_PATTERN)
-	}
-
-	return &channelPath, nil
+	return fmt.Sprintf("%x", hashSum)
 }
