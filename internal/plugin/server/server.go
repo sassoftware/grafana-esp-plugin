@@ -8,6 +8,7 @@ package server
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"strconv"
 )
 
@@ -15,8 +16,8 @@ type Server struct {
 	url url.URL
 }
 
-func New(isTls bool, host string, port uint16) (*Server, error) {
-	url, err := generateServerUrl(isTls, host, port)
+func New(isTls bool, host string, portPtr *uint16, serverPath string) (*Server, error) {
+	url, err := generateServerUrl(isTls, host, portPtr, serverPath)
 	if err != nil {
 		return nil, err
 	}
@@ -33,19 +34,24 @@ func FromUrlString(urlString string) (*Server, error) {
 	isTls := url.Scheme == "wss"
 	host := url.Hostname()
 	portString := url.Port()
-	port, err := strconv.ParseUint(portString, 10, 16)
-	if err != nil {
-		return nil, err
+	var portPtr *uint16 = nil
+	if len(portString) > 0 {
+		port, err := strconv.ParseUint(portString, 10, 16)
+		if err != nil {
+			return nil, err
+		}
+		port16 := uint16(port)
+		portPtr = &port16
 	}
 
-	return New(isTls, host, uint16(port))
+	return New(isTls, host, portPtr, url.Path)
 }
 
 func (s *Server) GetUrl() url.URL {
 	return s.url
 }
 
-func generateServerUrl(isTls bool, host string, port uint16) (*url.URL, error) {
+func generateServerUrl(isTls bool, host string, portPtr *uint16, serverPath string) (*url.URL, error) {
 	var urlScheme string
 	if isTls {
 		urlScheme = "wss"
@@ -53,7 +59,13 @@ func generateServerUrl(isTls bool, host string, port uint16) (*url.URL, error) {
 		urlScheme = "ws"
 	}
 
-	var urlString string = fmt.Sprintf("%s://%s:%d/eventStreamProcessing/v2/connect", urlScheme, host, port)
+	if portPtr != nil {
+		host = fmt.Sprintf("%s:%d", host, *portPtr)
+	}
+
+	p := path.Join(serverPath, "eventStreamProcessing/v2/connect")
+
+	urlString := fmt.Sprintf("%s://%s/%s", urlScheme, host, p)
 	wsConnectionUrl, err := url.Parse(urlString)
 	if err != nil {
 		return nil, err
