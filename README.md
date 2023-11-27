@@ -1,7 +1,7 @@
 # SAS Event Stream Processing Data Source Plug-in for Grafana
 
 ## Overview
-The SAS Event Stream Processing Data Source Plug-in for Grafana enables you to discover and stream data from ESP servers in lightweight SAS Event Stream Processing in a Kubernetes environment. 
+The SAS Event Stream Processing Data Source Plug-in for Grafana enables you to discover and stream data from ESP servers in SAS Event Stream Processing in a Kubernetes environment. 
 
 The plug-in is intended for visualizing event streams and provides an alternative to using SAS Event Stream Streamviewer. The plug-in is not intended to be used as a monitoring tool.
 
@@ -14,7 +14,7 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 The following steps provide an example of how to get started with the plug-in. 
 
 ### Prerequisites
-* A running deployment of SAS Event Stream Processing in the Microsoft Azure Marketplace.
+* A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace, or Viya.
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
@@ -73,8 +73,8 @@ This section is relevant only to internal users at SAS.
 
 ### Prerequisites
 
-* Lightweight SAS Event Stream Processing running in Kubernetes with User Account and Authentication (UAA). For more information, see [SAS Event Stream Processing Lightweight Kubernetes](https://github.com/.sassoftware/esp-kubernetes).
-* A Grafana deployment with the name `grafana`, running in the same namespace as lightweight SAS Event Stream Processing.
+* SAS Event Stream Processing running in Kubernetes with User Account and Authentication (UAA), Keycloak Authentication or SAS Logon Authentication.
+* A Grafana deployment with the name `grafana`, running in the same namespace as SAS Event Stream Processing.
 * It is recommended to have an Ingress for the Grafana deployment.
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
 * Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
@@ -84,7 +84,7 @@ This section is relevant only to internal users at SAS.
 An installation script is provided to install the plug-in and configure Grafana. The installation script performs the following tasks:
  * Modifies the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
  * Configures a new `grafana.ini` file to enable OAuth authentication.
- * Configures Grafana as an OAuth client with the supported OAuth provider (UAA). Users of Grafana are directed to use the OAuth login page.
+ * Configures Grafana as an OAuth client with the chosen OAuth provider. Users of Grafana are directed to use the OAuth login page.
  * Optionally installs Grafana for you.
 
 Use the installation script to install the plug-in:
@@ -104,11 +104,12 @@ Use the installation script to install the plug-in:
 4. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
+   - The _oauth-provider_ of the environment, choose one of **uaa**, **keycloak** or **viya**.
    > **Caution**: Running the installation script might overwrite any existing Grafana configuration.
 
    ```
    cd ./install
-   bash configure-grafana.sh <namespace> https://github.com/sassoftware/grafana-esp-plugin/download/<version>/sasesp-plugin-<version>.zip
+   bash configure-grafana.sh <namespace> https://github.com/sassoftware/grafana-esp-plugin/download/<version>/sasesp-plugin-<version>.zip <oauth-provider>
    ```
 
 ### (Optional) Build and Install a Privately Signed Version of the Plug-in
