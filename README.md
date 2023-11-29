@@ -101,7 +101,11 @@ Use the installation script to install the plug-in:
    ```
    export DRY_RUN=true
    ```
-4. Run the installation script, adjusting the command to specify the following variables:
+4. (Optional) Set an environment variable to set the namespace in which Grafana is installed, if this differs from the namespace in which SAS Event Stream Processing is installed.
+   ```
+   export GRAFANA_NAMESPACE=grafana
+   ```
+5. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
    - The _oauth-provider_ of the environment. Select one of the following options: **uaa**, **keycloak** or **viya**.
