@@ -14,7 +14,7 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 The following steps provide an example of how to get started with the plug-in. 
 
 ### Prerequisites
-* A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace, or Viya.
+* A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
@@ -73,7 +73,7 @@ This section is relevant only to internal users at SAS.
 
 ### Prerequisites
 
-* SAS Event Stream Processing running in Kubernetes with User Account and Authentication (UAA), Keycloak Authentication or SAS Logon Authentication.
+* SAS Event Stream Processing running in Kubernetes with User Account and Authentication (UAA), Keycloak authentication or SAS Logon authentication.
 * A Grafana deployment with the name `grafana`, running in the same namespace as SAS Event Stream Processing.
 * It is recommended to have an Ingress for the Grafana deployment.
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
@@ -104,7 +104,7 @@ Use the installation script to install the plug-in:
 4. Run the installation script, adjusting the command to specify the following variables:
    - The Kubernetes _namespace_ in which SAS Event Stream Processing is installed.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
-   - The _oauth-provider_ of the environment, choose one of **uaa**, **keycloak** or **viya**.
+   - The _oauth-provider_ of the environment. Select one of the following options: **uaa**, **keycloak** or **viya**.
    > **Caution**: Running the installation script might overwrite any existing Grafana configuration.
 
    ```
