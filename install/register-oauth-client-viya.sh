@@ -18,7 +18,7 @@ function fetch_saslogon_token () {
 function register_oauth_client () {
     _token="$(fetch_saslogon_token)"
 
-    _redirecturl="https://${ESP_DOMAIN}/grafana/login/generic_oauth"
+    _redirecturl="https://${GRAFANA_DOMAIN}/grafana/login/generic_oauth"
 
     _body='{
         "scope": ["*"],
