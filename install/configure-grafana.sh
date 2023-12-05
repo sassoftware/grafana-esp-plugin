@@ -4,11 +4,11 @@ set -e -o pipefail -o nounset
 
 #input variables
 ESP_NAMESPACE="${1}"; export ESP_NAMESPACE
-ESP_PLUGIN_VERSION="${2}"
-OAUTH_TYPE="${3:-uaa}"
-GRAFANA_NAMESPACE="${4:-${ESP_NAMESPACE}}"
+GRAFANA_NAMESPACE="${2:-${ESP_NAMESPACE}}"
+ESP_PLUGIN_VERSION="${3}"
 
 #optional environment variables - exported for use in other scripts
+OAUTH_TYPE="${OAUTH_TYPE:-viya}"; export OAUTH_TYPE
 OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-sv_client}"; export OAUTH_CLIENT_ID
 OAUTH_CLIENT_SECRET="${OAUTH_CLIENT_SECRET:-secret}"; export OAUTH_CLIENT_SECRET
 KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"; export KEYCLOAK_SUBPATH
@@ -25,18 +25,23 @@ function check_requirements() {
   }
 
   [ -z "${ESP_NAMESPACE}" ] && {
-      echo "Usage: ${0} <namespace> <version> <oauth-type>" >&2
+      echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
       exit 1
   }
 
   [ -z "${ESP_PLUGIN_VERSION}" ] && {
-      echo "Usage: ${0} <namespace> <version> <oauth-type>" >&2
+      echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
       exit 1
   }
 
   if ! kubectl get namespace "${ESP_NAMESPACE}" 2>/dev/null 1>&2; then
       echo >&2 "ERROR: Namespace ${ESP_NAMESPACE} not found."
       exit 1
+  fi
+
+  if ! kubectl get namespace "${GRAFANA_NAMESPACE}" 2>/dev/null 1>&2; then
+        echo >&2 "ERROR: Namespace ${GRAFANA_NAMESPACE} not found."
+        exit 1
   fi
 }
 
@@ -65,8 +70,15 @@ function generate_manifests() {
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
 
     if [[ "${DRY_RUN}" == true ]]; then
-      echo $file
-      cat $file
+
+      if [[ "${INSTALL_GRAFANA}" == false && "${file}" == "grafana.yaml" ]]; then
+        echo ""
+
+      else
+        echo $file
+        cat $file
+      fi
+
     fi
 
   done
@@ -129,8 +141,8 @@ fi
 
 echo "Applying config-map.yaml"
 
-kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/config-map.yaml
+kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/config-map.yaml
 
 echo "Patching deployment/grafana with patch-grafana.yaml"
 
-kubectl -n "${ESP_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana
+kubectl -n "${GRAFANA_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana
