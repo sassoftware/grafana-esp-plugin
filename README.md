@@ -101,7 +101,7 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
    ```
 
 4. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
-   - The Kubernetes namespace in which SAS Event Stream Processing is installed _esp-namespace_.
+   - The Kubernetes namespace in which SAS Event Stream Processing is installed _namespace_.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
    - The _oauth-provider_ of the environment. Select one of the following options: `uaa`, `keycloak` or `viya`.
    - (Optional) The Kubernetes namespace in which Grafana is installed, _grafana-namespace_ if this differs from the namespace in which SAS Event Stream Processing is installed.
@@ -109,19 +109,19 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
 
    ```
    cd ./install
-   bash configure-grafana.sh <esp-namespace> <version> <oauth-provider> <grafana-namespace>
+   bash configure-grafana.sh <namespace> <version> <oauth-provider> <grafana-namespace>
    ```
 5. Run one of the following three scripts, depending on your chosen OAuth provider. Adjust the command to specify the following variables.
-   - The Kubernetes namespace in which SAS Event Stream Processing is installed, _esp-namespace_.
+   - The Kubernetes namespace in which SAS Event Stream Processing is installed, _namespace_.
    - (Optional) The Kubernetes namespace in which Grafana is installed, _grafana-namespace_ if this differs from the namespace in which SAS Event Stream Processing is installed.
    ```
-     bash register-oauth-client-keycloak.sh <esp-namespace> <grafana-namespace>
+     bash register-oauth-client-keycloak.sh <namespace> <grafana-namespace>
    ```
    ```
-     bash register-oauth-client-uaa.sh <esp-namespace> <grafana-namespace>
+     bash register-oauth-client-uaa.sh <namespace> <grafana-namespace>
      ```
    ```
-     bash register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
+     bash register-oauth-client-viya.sh <namespace> <grafana-namespace>
    ```
 6. If your OAuth provider is the SAS Viya platform and Grafana is not running in the same namespace as the SAS Viya platform, you must update the Content Security Policy (CSP) for SAS Logon to allow the Grafana host name to be used as a target of form submission. 
    If you do not update the CSP, the browser blocks the redirect. You can update the CSP in one of the following two ways:
