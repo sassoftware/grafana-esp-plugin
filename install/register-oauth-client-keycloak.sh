@@ -2,6 +2,25 @@
 
 set -e -o pipefail -o nounset
 
+ESP_NAMESPACE="${1}"
+KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
+
+function usage () {
+    echo "Usage: ${0} <esp-namespace> " >&2
+    exit 1
+}
+
+[ -z "$KUBECONFIG" ] && {
+    echo "KUBECONFIG environment variable unset." >&2
+    exit 1
+}
+
+[ -z "${ESP_NAMESPACE}" ] && {
+    usage
+}
+
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+
 function check_keycloak_deployment() {
     if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then
         echo >&2 "ERROR: No Keycloak deployment found under namespace ${ESP_NAMESPACE}."
@@ -105,5 +124,13 @@ OAUTH_CLIENT_ID=$(echo "${_oauth2_proxy_secret}" | jq -r '.data.OAUTH2_PROXY_CLI
 export OAUTH_CLIENT_ID
 OAUTH_CLIENT_SECRET=$(echo "${_oauth2_proxy_secret}" | jq -r '.data.OAUTH2_PROXY_CLIENT_SECRET | @base64d')
 export OAUTH_CLIENT_SECRET
+
+cat <<EOF
+OAuth details:
+  ESP Domain:         ${ESP_DOMAIN}
+  Grafana Domain:      ${GRAFANA_DOMAIN}
+  OAuth client ID:     ${OAUTH_CLIENT_ID}
+  OAuth client secret: ${OAUTH_CLIENT_SECRET}
+EOF
 
 prepare_keycloak_roles

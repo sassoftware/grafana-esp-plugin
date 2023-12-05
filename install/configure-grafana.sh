@@ -4,7 +4,7 @@ set -e -o pipefail -o nounset
 
 #input variables
 ESP_NAMESPACE="${1}"; export ESP_NAMESPACE
-ESP_PLUGIN_SOURCE="${2}"
+ESP_PLUGIN_VERSION="${2}"
 OAUTH_TYPE="${3:-uaa}"
 
 #optional environment variables - exported for use in other scripts
@@ -25,12 +25,12 @@ function check_requirements() {
   }
 
   [ -z "${ESP_NAMESPACE}" ] && {
-      echo "Usage: ${0} <namespace> <plugin-zip-url> <oauth-type>" >&2
+      echo "Usage: ${0} <namespace> <version> <oauth-type>" >&2
       exit 1
   }
 
-  [ -z "${ESP_PLUGIN_SOURCE}" ] && {
-      echo "Usage: ${0} <namespace> <plugin-zip-url> <oauth-type>" >&2
+  [ -z "${ESP_PLUGIN_VERSION}" ] && {
+      echo "Usage: ${0} <namespace> <version> <oauth-type>" >&2
       exit 1
   }
 
@@ -75,17 +75,14 @@ function generate_manifests() {
 check_requirements
 
 echo "Fetching required deployment information..."
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
-export ESP_DOMAIN
 
+#duplicate domain code
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
 GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+ESP_PLUGIN_SOURCE="https://github.com/sassoftware/grafana-esp-plugin/download/$ESP_PLUGIN_VERSION/sasesp-plugin-$ESP_PLUGIN_VERSION.zip"
 
 echo "Adding Grafana to allowed OAuth client redirects..."
 if [ "${OAUTH_TYPE}" == "viya" ]; then
-
-  if [[ "${DRY_RUN}" == false ]]; then
-      bash register-oauth-client-viya.sh
-  fi
 
   TEMPLATE_AUTH_URL="https://${ESP_DOMAIN}/SASLogon/oauth/authorize"
   TEMPLATE_TOKEN_URL="https://${ESP_DOMAIN}/SASLogon/oauth/token"
@@ -94,20 +91,12 @@ if [ "${OAUTH_TYPE}" == "viya" ]; then
 
 elif [ "${OAUTH_TYPE}" == "keycloak" ]; then
 
-  if [[ "${DRY_RUN}" == false ]]; then
-    bash register-oauth-client-keycloak.sh
-  fi
-
   TEMPLATE_AUTH_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/auth"
   TEMPLATE_TOKEN_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/token"
   TEMPLATE_API_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/userinfo"
   TEMPLATE_SIGNOUT_REDIRECT_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/logout?client_id=${OAUTH_CLIENT_ID}\&post_logout_redirect_uri=https://${ESP_DOMAIN}/grafana/login"
 
 else
-
-  if [[ "${DRY_RUN}" == false ]]; then
-    bash register-oauth-client-uaa.sh
-  fi
 
   TEMPLATE_AUTH_URL="https://${ESP_DOMAIN}/uaa/oauth/authorize"
   TEMPLATE_TOKEN_URL="https://${ESP_DOMAIN}/uaa/oauth/token?token_format=jwt"
@@ -129,12 +118,13 @@ echo "Generating manifests..."
 generate_manifests
 
 if [[ "${DRY_RUN}" == true ]]; then
+    #GF_INSTALL_PLUGINS_VALUE=$(kubectl -n "${ESP_NAMESPACE}" get deployment/grafana --output json | jq -c '.spec.template.spec.containers[0].env[] | select(.name | contains("GF_INSTALL_PLUGINS")) | .value')
     exit 0
 fi
 
 if [[ "${INSTALL_GRAFANA}" == true ]]; then
   echo "Installing grafana"
-  kubectl -n "${ESP_NAMESPACE}" apply -f ./manifests/grafana.yaml
+  kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
 fi
 
 echo "Applying config-map.yaml"
