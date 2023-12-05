@@ -59,7 +59,7 @@ function check_requirements() {
 
 # Fetch access token to perform admin tasks:
 function fetch_keycloak_admin_token() {
-    _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -s -k -X POST \
+    _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -k -X POST \
         -H 'Content-Type: application/x-www-form-urlencoded' \
         -H 'Accept: application/json' \
         -d "client_id=admin-cli&grant_type=password&username=${KEYCLOAK_ADMIN}&password=${KEYCLOAK_SECRET}")
@@ -70,7 +70,7 @@ function fetch_keycloak_admin_token() {
 function create_role() {
     _role_name="${1}"
     _role_repr="{\"name\": \"${_role_name}\", \"clientRole\": true}"
-    curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -s -k -X POST \
+    curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -k -X POST \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${_token}" \
         -d "${_role_repr}"
@@ -94,7 +94,7 @@ function add_protocol_mapper() {
        }
     }")
     _mapper_body=$(echo "${_mapper_repr}" | jq -r -c)
-    curl -s -k -X POST \
+    curl -k -X POST \
         "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/protocol-mappers/models" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${_token}" \
@@ -104,7 +104,7 @@ function add_protocol_mapper() {
 function prepare_keycloak_roles() {
     _token="$(fetch_keycloak_admin_token)"
     # Get sas-esp realm clients:
-    _kc_clients=$(curl -s -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
+    _kc_clients=$(curl -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
     # Get OAuth2 Proxy client ID:
     _client_id=$(echo "${_kc_clients}" | jq -r --arg opid "${OAUTH_CLIENT_ID}" '.[] | select(.clientId == $opid) | .id')
     # Create Grafana roles:
@@ -128,7 +128,6 @@ export OAUTH_CLIENT_SECRET
 cat <<EOF
 OAuth details:
   ESP Domain:         ${ESP_DOMAIN}
-  Grafana Domain:      ${GRAFANA_DOMAIN}
   OAuth client ID:     ${OAUTH_CLIENT_ID}
   OAuth client secret: ${OAUTH_CLIENT_SECRET}
 EOF
