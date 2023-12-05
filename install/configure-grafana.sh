@@ -6,6 +6,7 @@ set -e -o pipefail -o nounset
 ESP_NAMESPACE="${1}"; export ESP_NAMESPACE
 ESP_PLUGIN_VERSION="${2}"
 OAUTH_TYPE="${3:-uaa}"
+GRAFANA_NAMESPACE="${4:-${ESP_NAMESPACE}}"
 
 #optional environment variables - exported for use in other scripts
 OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-sv_client}"; export OAUTH_CLIENT_ID
@@ -16,7 +17,6 @@ KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"; export KEYCLOAK_SUBPATH
 DRY_RUN="${DRY_RUN:-false}"
 INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 GRAFANA_VERSION="${GRAFANA_VERSION:-9.5.13}"
-GRAFANA_NAMESPACE="${GRAFANA_NAMESPACE:-${ESP_NAMESPACE}}"
 
 function check_requirements() {
   [ -z "$KUBECONFIG" ] && {
