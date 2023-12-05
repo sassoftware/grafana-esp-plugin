@@ -2,6 +2,28 @@
 
 set -e -o pipefail -o nounset
 
+ESP_NAMESPACE="${1}"
+GRAFANA_NAMESPACE="${2:-${ESP_NAMESPACE}}"
+OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-sv_client}"; export OAUTH_CLIENT_ID
+OAUTH_CLIENT_SECRET="${OAUTH_CLIENT_SECRET:-secret}"; export OAUTH_CLIENT_SECRET
+
+function usage () {
+    echo "Usage: ${0} <viya-namespace> <grafana-namespace>" >&2
+    exit 1
+}
+
+[ -z "$KUBECONFIG" ] && {
+    echo "KUBECONFIG environment variable unset." >&2
+    exit 1
+}
+
+[ -z "${ESP_NAMESPACE}" ] && {
+    usage
+}
+
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+
 function fetch_consul_token () {
     _token=$(kubectl -n "${ESP_NAMESPACE}" get secret sas-consul-client -o go-template='{{ .data.CONSUL_TOKEN | base64decode}}')
 
@@ -47,5 +69,13 @@ function register_oauth_client () {
     fi
 
 }
+
+cat <<EOF
+OAuth details:
+  ESP Domain:         ${ESP_DOMAIN}
+  Grafana Domain:      ${GRAFANA_DOMAIN}
+  OAuth client ID:     ${OAUTH_CLIENT_ID}
+  OAuth client secret: ${OAUTH_CLIENT_SECRET}
+EOF
 
 register_oauth_client

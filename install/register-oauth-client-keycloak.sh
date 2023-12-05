@@ -2,6 +2,25 @@
 
 set -e -o pipefail -o nounset
 
+ESP_NAMESPACE="${1}"
+KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
+
+function usage () {
+    echo "Usage: ${0} <esp-namespace> " >&2
+    exit 1
+}
+
+[ -z "$KUBECONFIG" ] && {
+    echo "KUBECONFIG environment variable unset." >&2
+    exit 1
+}
+
+[ -z "${ESP_NAMESPACE}" ] && {
+    usage
+}
+
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+
 function check_keycloak_deployment() {
     if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then
         echo >&2 "ERROR: No Keycloak deployment found under namespace ${ESP_NAMESPACE}."
@@ -40,7 +59,7 @@ function check_requirements() {
 
 # Fetch access token to perform admin tasks:
 function fetch_keycloak_admin_token() {
-    _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -s -k -X POST \
+    _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -k -X POST \
         -H 'Content-Type: application/x-www-form-urlencoded' \
         -H 'Accept: application/json' \
         -d "client_id=admin-cli&grant_type=password&username=${KEYCLOAK_ADMIN}&password=${KEYCLOAK_SECRET}")
@@ -51,7 +70,7 @@ function fetch_keycloak_admin_token() {
 function create_role() {
     _role_name="${1}"
     _role_repr="{\"name\": \"${_role_name}\", \"clientRole\": true}"
-    curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -s -k -X POST \
+    curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -k -X POST \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${_token}" \
         -d "${_role_repr}"
@@ -75,7 +94,7 @@ function add_protocol_mapper() {
        }
     }")
     _mapper_body=$(echo "${_mapper_repr}" | jq -r -c)
-    curl -s -k -X POST \
+    curl -k -X POST \
         "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/protocol-mappers/models" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${_token}" \
@@ -85,7 +104,7 @@ function add_protocol_mapper() {
 function prepare_keycloak_roles() {
     _token="$(fetch_keycloak_admin_token)"
     # Get sas-esp realm clients:
-    _kc_clients=$(curl -s -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
+    _kc_clients=$(curl -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
     # Get OAuth2 Proxy client ID:
     _client_id=$(echo "${_kc_clients}" | jq -r --arg opid "${OAUTH_CLIENT_ID}" '.[] | select(.clientId == $opid) | .id')
     # Create Grafana roles:
@@ -105,5 +124,12 @@ OAUTH_CLIENT_ID=$(echo "${_oauth2_proxy_secret}" | jq -r '.data.OAUTH2_PROXY_CLI
 export OAUTH_CLIENT_ID
 OAUTH_CLIENT_SECRET=$(echo "${_oauth2_proxy_secret}" | jq -r '.data.OAUTH2_PROXY_CLIENT_SECRET | @base64d')
 export OAUTH_CLIENT_SECRET
+
+cat <<EOF
+OAuth details:
+  ESP Domain:         ${ESP_DOMAIN}
+  OAuth client ID:     ${OAUTH_CLIENT_ID}
+  OAuth client secret: ${OAUTH_CLIENT_SECRET}
+EOF
 
 prepare_keycloak_roles
