@@ -85,7 +85,7 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
  * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
  * Configure a new `grafana.ini` file to enable OAuth authentication.
  * Configure Grafana as an OAuth client with the chosen OAuth provider. Users of Grafana are directed to use the OAuth login page.
- * Optionally installs Grafana for you.
+ * Optionally install Grafana for you.
 
 1. Set the correct Kubernetes configuration file for your environment.
    ```
