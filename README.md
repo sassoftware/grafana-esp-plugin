@@ -74,7 +74,7 @@ The plug-in is automatically installed with the SAS Event Stream Processing app 
 ### Prerequisites
 
 * SAS Event Stream Processing running in the SAS Viya platform.
-* A Grafana deployment with the name grafana. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace.
+* A Grafana deployment with the name `grafana`. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace.
 * Ingress for the Grafana deployment, with the root URL `/grafana`.
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
 * Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
