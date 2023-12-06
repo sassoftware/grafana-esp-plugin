@@ -15,6 +15,7 @@ The following steps provide an example of how to get started with the plug-in.
 
 ### Prerequisites
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
+* The plug-in is automatically installed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can install the plug-in by completing the instructions in [Installing the Plug-in](#installing-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
@@ -68,13 +69,12 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards:
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana tutorials](https://grafana.com/tutorials/)
 
-## SAS Internal Deployment Notes
-This section is relevant only to internal users at SAS.
-
+## Installing the Plug-in
+The plug-in is automatically installed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can install the plug-in by completing the following instructions.
 ### Prerequisites
 
 * SAS Event Stream Processing running in the SAS Viya platform.
-* A Grafana deployment with the name `grafana`, this can be on a separate namespace to SAS Event Stream Processing.
+* A Grafana deployment with the name grafana. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace.
 * Ingress for the Grafana deployment, with the root URL `/grafana`.
 * A Linux environment with kubectl installed, to run the plug-in installation script. 
 * Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
@@ -83,7 +83,7 @@ This section is relevant only to internal users at SAS.
 
 Installation scripts are provided to install the plug-in and configure Grafana. These scripts perform the following tasks:
  * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
- * Create a new `grafana.ini` file to enable OAuth authentication, this will overwrite any existing Grafana configuration.
+ * Create a new `grafana.ini` file to enable OAuth authentication. Creating this file overwrites any existing Grafana configuration.
  * Configure Grafana as an OAuth client with SAS Logon. Users of Grafana are directed to use SAS Logon.
  * Optionally install Grafana for you.
 
@@ -101,10 +101,10 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
    ```
 
 4. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
-   - The Kubernetes namespace in which SAS Event Stream Processing is installed _esp-namespace_.
+   - The Kubernetes namespace in which SAS Event Stream Processing is installed, _esp-namespace_.
    - The Kubernetes namespace in which Grafana is installed, _grafana-namespace_.
    - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
-   > **Caution**: Running the installation script will overwrite any existing Grafana configuration.
+   > **Caution**: Running the installation script overwrites any existing Grafana configuration.
 
    ```
    cd ./install
