@@ -422,7 +422,7 @@ class EspQueryController {
 
   private setServer(server: Server | null): void {
     this.espQuery.externalServerUrl = server ? server.externalUrl : null;
-    this.espQuery.internalServerUrl = server ? server.internalUrl : null;
+    this.espQuery.internalServerUrl = server ? server.url : null;
   }
 
   private setProject(project: Project | null): void {

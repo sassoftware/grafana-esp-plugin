@@ -36,7 +36,7 @@ export interface Project {
 
 export interface Server {
   externalUrl: string;
-  internalUrl: string;
+  url: string;
   name: string;
   projects: Project[];
 }
