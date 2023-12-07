@@ -63,6 +63,10 @@ func generateServerUrl(isTls bool, host string, portPtr *uint16, serverPath stri
 		host = fmt.Sprintf("%s:%d", host, *portPtr)
 	}
 
+	if len(serverPath) > 0 && serverPath[:1] == "/" {
+		serverPath = serverPath[1:]
+	}
+
 	p := path.Join(serverPath, "eventStreamProcessing/v2/connect")
 
 	urlString := fmt.Sprintf("%s://%s/%s", urlScheme, host, p)
