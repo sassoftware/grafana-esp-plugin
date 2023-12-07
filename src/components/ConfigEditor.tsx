@@ -50,6 +50,10 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
         changePropOptionsJsonData({tlsSkipVerify: checked});
     }
 
+    const handleInternalNetworkingCheckboxChange = (checked: boolean) => {
+        changePropOptionsJsonData({useInternalNetworking: checked});
+    }
+
     const handleViyaCheckboxChange = (checked: boolean) => {
         const isViya = checked;
         // Grafana will ignore attempts to reset datasource URLs and will revert to the previously saved value upon a future save, rather than persist a falsy URL.
@@ -95,6 +99,9 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
                         onChange={handleDiscoveryServiceProviderChange}
                 />
             </HorizontalGroup>
+            <Checkbox label="Use internal networking for ESP connectivity" value={jsonData.useInternalNetworking ?? false}
+                      onChange={e => handleInternalNetworkingCheckboxChange(e.currentTarget.checked)}
+            />
             <Checkbox label="(Insecure) Skip TLS certificate verification" value={jsonData.tlsSkipVerify ?? false}
                       onChange={e => handleTlsSkipVerifyCheckboxChange(e.currentTarget.checked)}
             />

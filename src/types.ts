@@ -99,4 +99,5 @@ export interface EspDataSourceOptions extends DataSourceJsonData {
   oauthPassThru: boolean;
   tlsSkipVerify: boolean;
   isViya: boolean;
+  useInternalNetworking: boolean;
 }

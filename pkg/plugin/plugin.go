@@ -92,9 +92,9 @@ type SampleDatasource struct {
 }
 
 type datasourceJsonData struct {
-	IsViya        bool `json:"isViya"`
-	OauthPassThru bool `json:"oauthPassThru"`
-	TlsSkipVerify bool `json:"tlsSkipVerify"`
+	UseInternalNetworking bool `json:"useInternalNetworking"`
+	OauthPassThru         bool `json:"oauthPassThru"`
+	TlsSkipVerify         bool `json:"tlsSkipVerify"`
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -130,7 +130,12 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 			continue
 		}
 
-		serverUrl := qdto.ExternalServerUrl
+		var serverUrl string
+		if d.jsonData.UseInternalNetworking {
+			serverUrl = qdto.InternalServerUrl
+		} else {
+			serverUrl = qdto.ExternalServerUrl
+		}
 
 		var authHeaderToBePassed *string = nil
 		if authorizationHeaderPtr != nil && d.isServerUrlTrusted(serverUrl, true, authorizationHeaderPtr) {
@@ -144,7 +149,15 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 }
 
 func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto querydto.QueryDTO, authorizationHeader *string) backend.DataResponse {
-	s, err := server.FromUrlString(qdto.ExternalServerUrl)
+	var qServerUrl string
+	if d.jsonData.UseInternalNetworking {
+		qServerUrl = qdto.InternalServerUrl
+		log.DefaultLogger.Debug("Using internal ESP server URL from query", "query", qdto)
+	} else {
+		qServerUrl = qdto.ExternalServerUrl
+	}
+
+	s, err := server.FromUrlString(qServerUrl)
 	if err != nil {
 		return handleQueryError("invalid server URL", err)
 	}
