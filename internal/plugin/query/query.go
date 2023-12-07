@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"grafana-esp-plugin/internal/plugin/server"
 	"net/url"
 	"strconv"
 	"strings"
@@ -26,9 +25,9 @@ type Query struct {
 	AuthorizationHeader *string
 }
 
-func New(s server.Server, projectName string, cqName string, windowName string, interval uint64, maxEvents uint64, fields []string, authorizationHeader *string) *Query {
+func New(serverUrl url.URL, projectName string, cqName string, windowName string, interval uint64, maxEvents uint64, fields []string, authorizationHeader *string) *Query {
 	return &Query{
-		ServerUrl:           s.GetUrl(),
+		ServerUrl:           serverUrl,
 		ProjectName:         projectName,
 		CqName:              cqName,
 		WindowName:          windowName,

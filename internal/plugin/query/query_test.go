@@ -21,7 +21,7 @@ func createQuery(t *testing.T) Query {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	q := New(*s, "project", "cq", "window", 1, 2, []string{}, nil)
+	q := New(s.GetUrl(), "project", "cq", "window", 1, 2, []string{}, nil)
 
 	return *q
 }
@@ -32,7 +32,7 @@ func TestQueryToChannelPath(t *testing.T) {
 	q2 := createQuery(t)
 	authHeader := "Bearer foo"
 	q2.AuthorizationHeader = &authHeader
-	
+
 	q3 := createQuery(t)
 	q3.ProjectName = "foo"
 
