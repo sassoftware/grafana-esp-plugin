@@ -6,7 +6,8 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface EspQuery extends DataQuery {
-  serverUrl: string | null;
+  externalServerUrl: string | null;
+  internalServerUrl: string | null;
   projectName: string | null;
   cqName: string | null;
   windowName: string | null;
@@ -34,7 +35,8 @@ export interface Project {
 }
 
 export interface Server {
-  url: string;
+  externalUrl: string;
+  internalUrl: string;
   name: string;
   projects: Project[];
 }

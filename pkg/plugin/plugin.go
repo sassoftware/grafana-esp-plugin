@@ -130,8 +130,10 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 			continue
 		}
 
+		serverUrl := qdto.ExternalServerUrl
+
 		var authHeaderToBePassed *string = nil
-		if authorizationHeaderPtr != nil && d.isServerUrlTrusted(qdto.ServerUrl, true, authorizationHeaderPtr) {
+		if authorizationHeaderPtr != nil && d.isServerUrlTrusted(serverUrl, true, authorizationHeaderPtr) {
 			authHeaderToBePassed = authorizationHeaderPtr
 		}
 
@@ -142,7 +144,7 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 }
 
 func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto querydto.QueryDTO, authorizationHeader *string) backend.DataResponse {
-	s, err := server.FromUrlString(qdto.ServerUrl)
+	s, err := server.FromUrlString(qdto.ExternalServerUrl)
 	if err != nil {
 		return handleQueryError("invalid server URL", err)
 	}
@@ -376,8 +378,9 @@ func newSerializedCallResourceResponseErrorBody(errorMessage string) []byte {
 }
 
 type discoveredServer struct {
-	Url     string `json:"url"`
-	Trusted bool   `json:"trusted"`
+	InternalUrl string `json:"url"`
+	ExternalUrl string `json:"externalUrl"`
+	Trusted     bool   `json:"trusted"`
 }
 
 func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
@@ -400,9 +403,7 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 			return sender.Send(response)
 		}
 
-		for _, discoveredServer := range *discoveredServers {
-			d.serverUrlTrustedMap.Set(discoveredServer.Url, &discoveredServer.Trusted)
-		}
+		d.updateServerTrust(*discoveredServers)
 
 		responseBody, err := json.Marshal(callResourceResponseBody{Data: *serversData})
 		if err != nil {
@@ -483,13 +484,18 @@ func (d *SampleDatasource) isServerUrlTrusted(url string, fetchIfMissing bool, a
 			return false
 		}
 
-		for _, discoveredServer := range *discoveredServers {
-			d.serverUrlTrustedMap.Set(discoveredServer.Url, &discoveredServer.Trusted)
-		}
+		d.updateServerTrust(*discoveredServers)
 
 		return d.isServerUrlTrusted(url, false, nil)
 	}
 
 	log.DefaultLogger.Error("Unable to determine trusted status of server URL", "url", url, "error", err)
 	return false
+}
+
+func (d *SampleDatasource) updateServerTrust(discoveredServers []discoveredServer) {
+	for _, discoveredServer := range discoveredServers {
+		d.serverUrlTrustedMap.Set(discoveredServer.InternalUrl, &discoveredServer.Trusted)
+		d.serverUrlTrustedMap.Set(discoveredServer.ExternalUrl, &discoveredServer.Trusted)
+	}
 }

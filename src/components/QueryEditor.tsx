@@ -231,7 +231,7 @@ export class QueryEditor extends PureComponent<Props> {
     let selectedFields: Field[] | undefined = [];
     const returnValue = (): [Server?, Project?, ContinuousQuery?, Window?, Field[]?] => [selectedServer, selectedProject, selectedCq, selectedWindow, selectedFields];
 
-    selectedServer = servers.find((server: Server) => server.url === query.serverUrl) ?? undefined;
+    selectedServer = servers.find((server: Server) => server.externalUrl === query.externalServerUrl) ?? undefined;
     if (!selectedServer) {
       return returnValue();
     }
@@ -421,7 +421,8 @@ class EspQueryController {
   }
 
   private setServer(server: Server | null): void {
-    this.espQuery.serverUrl = server ? server.url : null;
+    this.espQuery.externalServerUrl = server ? server.externalUrl : null;
+    this.espQuery.internalServerUrl = server ? server.internalUrl : null;
   }
 
   private setProject(project: Project | null): void {
