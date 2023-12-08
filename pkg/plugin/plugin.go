@@ -92,6 +92,7 @@ type SampleDatasource struct {
 }
 
 type datasourceJsonData struct {
+	IsViya                bool `json:"isViya"`
 	UseInternalNetworking bool `json:"useInternalNetworking"`
 	OauthPassThru         bool `json:"oauthPassThru"`
 	TlsSkipVerify         bool `json:"tlsSkipVerify"`
@@ -117,7 +118,7 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 		return nil, err
 	}
 	var authorizationHeaderPtr *string = nil
-	if jsonData.OauthPassThru {
+	if jsonData.OauthPassThru && jsonData.IsViya {
 		authorizationHeader := req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName)
 		authorizationHeaderPtr = &authorizationHeader
 	}
@@ -162,7 +163,6 @@ func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto q
 		return handleQueryError("invalid server URL", err)
 	}
 	serverUrl := s.GetUrl()
-	serverUrl.Scheme = "wss"
 
 	q := query.New(serverUrl, qdto.ProjectName, qdto.CqName, qdto.WindowName, qdto.Interval, qdto.MaxDataPoints, qdto.Fields, authorizationHeader)
 
