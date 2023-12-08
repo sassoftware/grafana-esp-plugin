@@ -170,7 +170,7 @@ func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto q
 
 	d.channelQueryMap.Set(channelPath, q)
 
-	log.DefaultLogger.Debug("Received query", "path", channelPath)
+	log.DefaultLogger.Debug("Received query", "path", channelPath, "query", q)
 
 	// If query called with streaming on then return a channel
 	// to subscribe on a client-side and consume updates from a plugin.
@@ -286,6 +286,7 @@ func (d *SampleDatasource) RunStream(ctx context.Context, req *backend.RunStream
 		return nil
 	}
 
+	log.DefaultLogger.Debug("Instantiating new ESP websocket client from query", "query", q)
 	espWsClient := client.New(q.ServerUrl, q.AuthorizationHeader)
 	defer espWsClient.Close()
 
