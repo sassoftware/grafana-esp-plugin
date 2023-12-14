@@ -41,7 +41,9 @@ To visualise data, you must have an ESP project running in either SAS Event Stre
 
 ### Examples
 
-Some SAS Event Stream Processing Studio examples include Grafana dashboards:
+Some SAS Event Stream Processing Studio examples include Grafana dashboards.
+
+**_NOTE:_** The dashboards have been created using a standalone version of ESP running in the same namespace as ESP. If you are using a different environment, like Viya, you will need to recreate the queries becasue the connection URLs will differ.    
 
 1. In SAS Event Stream Processing Studio, click ![Help](img/icon-helpmenu.png "Help") on any page and select **Examples**.
 
