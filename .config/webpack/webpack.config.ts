@@ -172,11 +172,15 @@ const config = async (env): Promise<Configuration> => ({
           },
           {
             search: /\%TODAY\%/g,
-            replace: new Date().toISOString().substring(0, 10),
+            replace: new Date().toISOString(),
           },
           {
             search: /\%PLUGIN_ID\%/g,
             replace: pluginJson.id,
+          },
+          {
+            search: /\%buildTime\%/g,
+            replace: Date.now(),
           },
         ],
       },
