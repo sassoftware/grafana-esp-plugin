@@ -180,7 +180,7 @@ const config = async (env): Promise<Configuration> => ({
           },
           {
             search: /\%buildTime\%/g,
-            replace: Date.now(),
+            replace: Date.now().toString(),
           },
         ],
       },
