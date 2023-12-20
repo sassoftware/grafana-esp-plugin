@@ -7,7 +7,7 @@ The plug-in is intended for visualizing event streams and provides an alternativ
 
 Here is an example of a Grafana dashboard for an ESP project. This dashboard relates to the Sailing example that is discussed in [Examples](#examples).
 
-<img alt="Sailing dashboard" src="img/sailing-dashboard.png"  width="50%" height="50%">
+<img alt="Sailing dashboard" src="src/img/sailing-dashboard.png"  width="50%" height="50%">
 
 
 ## Getting Started
@@ -43,7 +43,7 @@ To visualise data, you must have an ESP project running in either SAS Event Stre
 
 Some SAS Event Stream Processing Studio examples include Grafana dashboards:
 
-1. In SAS Event Stream Processing Studio, click ![Help](img/icon-helpmenu.png "Help") on any page and select **Examples**.
+1. In SAS Event Stream Processing Studio, click ![Help](src/img/icon-helpmenu.png "Help") on any page and select **Examples**.
 
 2. Install the Sailing example or the ONNX example.
 
