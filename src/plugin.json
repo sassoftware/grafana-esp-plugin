@@ -34,10 +34,7 @@
     ],
     "screenshots": [],
     "version": "%VERSION%",
-    "updated": "%TODAY%",
-    "build": {
-      "time": "%buildTime%"
-    }
+    "updated": "%TODAY%"
   },
   "dependencies": {
     "grafanaDependency": ">=9.0.0",
