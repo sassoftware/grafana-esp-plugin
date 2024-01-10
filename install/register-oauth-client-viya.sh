@@ -21,8 +21,8 @@ function usage () {
     usage
 }
 
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
-GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+#Work out the domain names
+. get-domain-name.sh ESP_NAMESPACE GRAFANA_NAMESPACE
 
 function fetch_consul_token () {
     _token=$(kubectl -n "${ESP_NAMESPACE}" get secret sas-consul-client -o go-template='{{ .data.CONSUL_TOKEN | base64decode}}')

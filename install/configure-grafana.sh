@@ -87,9 +87,9 @@ check_requirements
 
 echo "Fetching required deployment information..."
 
-#duplicate domain code
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
-GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+#Work out the domain names
+. get-domain-name.sh ESP_NAMESPACE GRAFANA_NAMESPACE
+
 ESP_PLUGIN_SOURCE="https://github.com/sassoftware/grafana-esp-plugin/releases/download/v$ESP_PLUGIN_VERSION/sasesp-plugin-$ESP_PLUGIN_VERSION.zip"
 
 if [ "${OAUTH_TYPE}" == "viya" ]; then
