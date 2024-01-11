@@ -12,17 +12,18 @@ function usage () {
     exit 1
 }
 
-[ -z "$KUBECONFIG" ] && {
+[ -z "${KUBECONFIG-}" ] && {
     echo "KUBECONFIG environment variable unset." >&2
     exit 1
 }
 
-[ -z "${ESP_NAMESPACE}" ] && {
-    usage
+[ -z "${ESP_NAMESPACE-}" ] && {
+    echo "Usage: ${0} <esp-namespace> <grafana-namespace>" >&2
+    exit 1
 }
 
 #Work out the domain names
-. get-domain-name.sh ESP_NAMESPACE GRAFANA_NAMESPACE
+. get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
 function fetch_consul_token () {
     _token=$(kubectl -n "${ESP_NAMESPACE}" get secret sas-consul-client -o go-template='{{ .data.CONSUL_TOKEN | base64decode}}')

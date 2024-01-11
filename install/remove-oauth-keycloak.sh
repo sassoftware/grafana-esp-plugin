@@ -8,13 +8,13 @@ ESP_NAMESPACE="${1}"
 
 function check_requirements() {
 
-  [ -z "$KUBECONFIG" ] && {
+  [ -z "${KUBECONFIG-}" ] && {
     echo "KUBECONFIG environment variable unset." >&2
     exit 1
   }
 
-  [ -z "${ESP_NAMESPACE}" ] && {
-    echo "Usage: ${0} <esp-namespace>" >&2
+  [ -z "${ESP_NAMESPACE-}" ] && {
+    echo "Usage: ${0} <esp-namespace> <grafana-namespace>" >&2
     exit 1
   }
 
