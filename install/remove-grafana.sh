@@ -2,6 +2,8 @@
 
 set -e -o pipefail -o nounset
 
+NAMESPACE="${1}"
+
 [ -z "${KUBECONFIG-}" ] && {
     echo "KUBECONFIG environment variable unset." >&2
     exit 1
@@ -12,5 +14,10 @@ set -e -o pipefail -o nounset
     exit 1
 }
 
+[ -z "${NAMESPACE-}" ] && {
+      echo "Usage: ${0} <namespace> <version>" >&2
+      exit 1
+}
+
 echo "Removing Grafana..."
-kubectl -n "${ESP_NAMESPACE}" delete -k ./manifests/
+kubectl -n "${NAMESPACE}" delete -k ./manifests/

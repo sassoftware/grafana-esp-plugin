@@ -25,9 +25,37 @@ function usage () {
 #Work out the domain names
 . get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
+function fetch_consul_token () {
+    _token=$(kubectl -n "${ESP_NAMESPACE}" get secret sas-consul-client -o go-template='{{ .data.CONSUL_TOKEN | base64decode}}')
+
+    echo ${_token}
+}
+
+function fetch_saslogon_token () {
+    _token=$(fetch_consul_token)
+    _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients/consul?callback=false&serviceId=app" -H "X-Consul-Token: ${_token}")
+
+    echo "${_resp}" | jq -r '.access_token'
+}
+
 function remove_oauth_client () {
-  #TODO work out how to remove grafana form saslogon is it a dleete request
-  echo "Not implemented"
+    _token="$(fetch_saslogon_token)"
+
+    _resp=$(curl -k -X DELETE "https://$ESP_DOMAIN/SASLogon/oauth/clients/$OAUTH_CLIENT_ID" \
+        -H 'Content-Type: application/json' \
+        -H "Authorization: Bearer ${_token}")
+
+    regex_error="error"
+    if [[ "${_resp}" =~ $regex_error ]]; then
+       error=$(echo "${_resp}" | jq -r '.error')
+       error_description=$(echo "${_resp}" | jq -r '.error_description')
+       echo >&2 "Failed to register Grafana as OAuth client"
+       echo >&2 "${error}: ${error_description}"
+
+    else
+       echo "Grafana un-registered as OAuth client"
+    fi
+
 }
 
 cat <<EOF
