@@ -10,16 +10,17 @@ function usage () {
     exit 1
 }
 
-[ -z "$KUBECONFIG" ] && {
+[ -z "${KUBECONFIG-}" ] && {
     echo "KUBECONFIG environment variable unset." >&2
     exit 1
 }
 
-[ -z "${ESP_NAMESPACE}" ] && {
-    usage
+[ -z "${ESP_NAMESPACE-}" ] && {
+    echo "Usage: ${0} <esp-namespace> <grafana-namespace>" >&2
+    exit 1
 }
 
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host')
 
 function check_keycloak_deployment() {
     if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then

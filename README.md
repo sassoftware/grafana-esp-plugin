@@ -89,6 +89,7 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
  * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
  * Create a new `grafana.ini` file to enable OAuth authentication. Creating this file overwrites any existing Grafana configuration.
  * Configure Grafana as an OAuth client with SAS Logon. Users of Grafana are directed to use SAS Logon.
+ * Determine the correct Domain Name for your environment by looking at existing ingresses.
  * Optionally install Grafana for you.
 
 1. Set the correct Kubernetes configuration file for your environment.

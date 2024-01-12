@@ -38,25 +38,12 @@ function fetch_saslogon_token () {
     echo "${_resp}" | jq -r '.access_token'
 }
 
-function register_oauth_client () {
+function remove_oauth_client () {
     _token="$(fetch_saslogon_token)"
 
-    _redirecturl="https://${GRAFANA_DOMAIN}/grafana/login/generic_oauth"
-
-    _body='{
-        "scope": ["*"],
-        "client_id": "'"${OAUTH_CLIENT_ID}"'",
-        "client_secret": "'"${OAUTH_CLIENT_SECRET}"'",
-        "authorized_grant_types": ["authorization_code"],
-        "redirect_uri": ["'"${_redirecturl}"'"],
-        "autoapprove": ["true"],
-        "name": "Grafana"
-    }'
-
-    _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients" \
+    _resp=$(curl -k -X DELETE "https://$ESP_DOMAIN/SASLogon/oauth/clients/$OAUTH_CLIENT_ID" \
         -H 'Content-Type: application/json' \
-        -H "Authorization: Bearer ${_token}" \
-        -d "${_body}")
+        -H "Authorization: Bearer ${_token}")
 
     regex_error="error"
     if [[ "${_resp}" =~ $regex_error ]]; then
@@ -66,7 +53,7 @@ function register_oauth_client () {
        echo >&2 "${error}: ${error_description}"
 
     else
-       echo "Grafana registered as OAuth client"
+       echo "Grafana un-registered as OAuth client"
     fi
 
 }
@@ -79,4 +66,4 @@ OAuth details:
   OAuth client secret: ${OAUTH_CLIENT_SECRET}
 EOF
 
-register_oauth_client
+remove_oauth_client

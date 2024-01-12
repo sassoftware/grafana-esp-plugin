@@ -58,7 +58,7 @@ function remove_grafana_auth_redirect() {
 }
 
 echo "Fetching required deployment information..."
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json |
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json |
     jq -r '.items[0].spec.rules[0].host')
 export ESP_DOMAIN
 

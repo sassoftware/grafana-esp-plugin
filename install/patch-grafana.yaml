@@ -10,7 +10,7 @@ spec:
       - name: grafana
         env:
           - name: GF_INSTALL_PLUGINS
-            value: TEMPLATE_ESP_PLUGIN_SOURCE;sasesp-plugin
+            value: TEMPLATE_ESP_PLUGIN_SOURCE;sasesp-plugin,volkovlabs-image-panel
         volumeMounts:
         - mountPath: /etc/grafana/grafana.ini
           name: grafana-config

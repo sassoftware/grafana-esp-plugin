@@ -19,17 +19,17 @@ INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 GRAFANA_VERSION="${GRAFANA_VERSION:-9.5.13}"
 
 function check_requirements() {
-  [ -z "$KUBECONFIG" ] && {
+  [ -z "${KUBECONFIG-}" ] && {
       echo "KUBECONFIG environment variable unset." >&2
       exit 1
   }
 
-  [ -z "${ESP_NAMESPACE}" ] && {
+  [ -z "${ESP_NAMESPACE-}" ] && {
       echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
       exit 1
   }
 
-  [ -z "${ESP_PLUGIN_VERSION}" ] && {
+  [ -z "${ESP_PLUGIN_VERSION-}" ] && {
       echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
       exit 1
   }
@@ -87,9 +87,9 @@ check_requirements
 
 echo "Fetching required deployment information..."
 
-#duplicate domain code
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
-GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host')
+#Work out the domain names
+. get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
+
 ESP_PLUGIN_SOURCE="https://github.com/sassoftware/grafana-esp-plugin/releases/download/v$ESP_PLUGIN_VERSION/sasesp-plugin-$ESP_PLUGIN_VERSION.zip"
 
 if [ "${OAUTH_TYPE}" == "viya" ]; then
@@ -129,7 +129,6 @@ echo "Generating manifests..."
 generate_manifests
 
 if [[ "${DRY_RUN}" == true ]]; then
-    #GF_INSTALL_PLUGINS_VALUE=$(kubectl -n "${ESP_NAMESPACE}" get deployment/grafana --output json | jq -c '.spec.template.spec.containers[0].env[] | select(.name | contains("GF_INSTALL_PLUGINS")) | .value')
     exit 0
 fi
 
