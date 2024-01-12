@@ -32,3 +32,5 @@
 * treat syncmap.Set calls with nil value as Delete calls ([d704aaa](https://github.com/sassoftware/grafana-esp-plugin/commit/d704aaacd8b77f8d45a355c0c508dbe18d474370))
 
 ## 7.45.0
+
+## 
