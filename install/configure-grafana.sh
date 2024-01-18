@@ -132,15 +132,15 @@ if [[ "${DRY_RUN}" == true ]]; then
     exit 0
 fi
 
+echo "Create config-map.yaml"
+kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/config-map.yaml
+
 if [[ "${INSTALL_GRAFANA}" == true ]]; then
   echo "Installing grafana"
   kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
+  #No need to patch grafana as it will already be installed with the plugin and config
+  exit 0
 fi
 
-echo "Applying config-map.yaml"
-
-kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/config-map.yaml
-
 echo "Patching deployment/grafana with patch-grafana.yaml"
-
 kubectl -n "${GRAFANA_NAMESPACE}" patch --patch-file ./manifests/patch-grafana.yaml deployment/grafana

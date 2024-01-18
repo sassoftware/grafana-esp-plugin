@@ -32,6 +32,9 @@ spec:
       containers:
         - name: grafana
           image: docker.io/grafana/grafana:TEMPLATE_GRAFANA_VERSION
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: TEMPLATE_ESP_PLUGIN_SOURCE;sasesp-plugin,volkovlabs-image-panel
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
@@ -62,10 +65,17 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/grafana
               name: grafana-pv
+            - mountPath: /etc/grafana/grafana.ini
+              name: grafana-config
+              subPath: grafana-uaa.ini
       volumes:
         - name: grafana-pv
           persistentVolumeClaim:
             claimName: grafana-pvc
+        - name: grafana-config
+          configMap:
+            defaultMode: 420
+            name: grafana-ini
 ---
 kind: Service
 apiVersion: v1
