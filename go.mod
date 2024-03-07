@@ -3,9 +3,7 @@
 
 module grafana-esp-plugin
 
-go 1.21
-
-toolchain go1.21.3
+go 1.22.1
 
 require (
 	github.com/fxamacker/cbor v1.5.1
