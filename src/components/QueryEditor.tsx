@@ -4,7 +4,7 @@
 */
 
 import React, {PureComponent} from 'react';
-import {Select, SelectCommonProps} from '@grafana/ui';
+import {Alert, Select, SelectCommonProps} from '@grafana/ui';
 import {QueryEditorProps, SelectableValue} from '@grafana/data';
 import {DataSource} from '../datasource';
 import {
@@ -26,6 +26,15 @@ interface ServersResponse {
   data: Server[]
 }
 
+interface ServersErrorResponse {
+  data: {
+    error: string,
+    message: string
+  },
+  status: number,
+  statusText: string,
+}
+
 interface State {
   isServerDataFetched: boolean;
   serverOptions: Array<SelectableEspObject<Server>>;
@@ -38,6 +47,7 @@ interface State {
   selectedCq: ContinuousQuery | null | undefined;
   selectedWindow: Window | null | undefined;
   selectedFields: Field[];
+  errorMessage: String | null | undefined;
 }
 
 export class QueryEditor extends PureComponent<Props> {
@@ -58,7 +68,8 @@ export class QueryEditor extends PureComponent<Props> {
       selectedProject: undefined,
       selectedCq: undefined,
       selectedWindow: undefined,
-      selectedFields: []
+      selectedFields: [],
+      errorMessage: undefined
     };
 
     this.espQueryController = new EspQueryController(this.props.query, this.props.onChange, this.props.onRunQuery);
@@ -78,13 +89,19 @@ export class QueryEditor extends PureComponent<Props> {
           selectedFields: fields
         });
         await this.updateServers(servers);
-        await this.setStateWithPromise({ isServerDataFetched: true });
+        await this.setStateWithPromise({ isServerDataFetched: true, errorMessage: undefined });
       })
-      .catch(console.error);
+      .catch((serversErrorResponse: ServersErrorResponse) => {
+        this.setState({ errorMessage: serversErrorResponse.data.message});
+      });
   }
 
   render() {
     const state = this.state;
+
+    if (state.errorMessage != null) {
+      return <Alert title={`${state.errorMessage}`} severity="error"/>;
+    }
 
     if (!state.isServerDataFetched) {
       return <span>Discovering ESP servers...</span>;
