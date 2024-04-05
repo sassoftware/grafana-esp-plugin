@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"grafana-esp-plugin/internal/esp/client"
 	"grafana-esp-plugin/internal/esp/windowevent"
@@ -449,7 +450,9 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 	var discoveryEndpointUrl = d.discoveryEndpointUrl.String() + "/grafana/discovery"
 	log.DefaultLogger.Debug("Calling discovery endpoint", "discoveryEndpointUrl", discoveryEndpointUrl)
 
-	request, err := http.NewRequest(http.MethodGet, discoveryEndpointUrl, nil)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryEndpointUrl, nil)
 	if err != nil {
 		log.DefaultLogger.Error("Unable to create discovery request.", "error", err)
 		return nil, nil, err
@@ -461,8 +464,8 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 
 	resp, err := d.httpClient.Do(request)
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
-		return nil, nil, fmt.Errorf("unable to receive discovery response")
+		log.DefaultLogger.Error("Unable to receive discovery response.", "error", err)
+		return nil, nil, err
 	}
 
 	if resp.StatusCode != 200 {
