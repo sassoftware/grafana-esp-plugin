@@ -3,34 +3,78 @@
 	SPDX-License-Identifier: Apache-2.0
 */
 
-import React, {useEffect, useMemo, useRef} from 'react';
-import {Checkbox, HorizontalGroup, InlineLabel, Select, VerticalGroup} from '@grafana/ui';
+import React, {useMemo, useState} from 'react';
+import {Checkbox, Field, InlineLabel, Input, Select, Stack} from '@grafana/ui';
 import {DataSourcePluginOptionsEditorProps, SelectableValue} from '@grafana/data';
 import {EspDataSourceOptions} from '../types';
 
-ConfigEditor.DISCOVERY_DEFAULT_OPTIONS = [
+interface DiscoveryOption {
+    label: string,
+    value: string
+}
+
+ConfigEditor.DISCOVERY_DEFAULT_OPTIONS_NO_TLS = [
     {label: 'SAS Event Stream Manager', value: 'http://sas-event-stream-manager-app/SASEventStreamManager'},
     {label: 'SAS Event Stream Processing Studio', value: 'http://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio'},
 ];
 
-ConfigEditor.DISCOVERY_DEFAULT_VIYA_OPTIONS = [
+ConfigEditor.DISCOVERY_DEFAULT_OPTIONS_TLS = [
     {label: 'SAS Event Stream Manager', value: 'https://sas-event-stream-manager-app/SASEventStreamManager'},
     {label: 'SAS Event Stream Processing Studio', value: 'https://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio'},
 ];
 
-export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptionsEditorProps<EspDataSourceOptions>) {
+enum DISCOVERY_TYPE_OPTION_VALUES {DEFAULT, URL}
+ConfigEditor.DISCOVERY_TYPE_OPTIONS = [
+    {label: "Internal", value: DISCOVERY_TYPE_OPTION_VALUES.DEFAULT},
+    {label: "URL", value: DISCOVERY_TYPE_OPTION_VALUES.URL}
+];
+
+ConfigEditor.stringToUrl = (urlString: string) => {
+    let url;
+    try {
+        url = new URL(urlString);
+    } catch (e: unknown) {
+        url = null;
+    }
+
+    return url;
+}
+
+ConfigEditor.getDiscoveryOptions = (tls: boolean) => tls ? ConfigEditor.DISCOVERY_DEFAULT_OPTIONS_TLS : ConfigEditor.DISCOVERY_DEFAULT_OPTIONS_NO_TLS;
+
+ConfigEditor.deriveSelectedOptionFromUrl = (discoveryServiceUrlString: string) => {
+    const discoveryServiceUrl = ConfigEditor.stringToUrl(discoveryServiceUrlString);
+    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl) : true;
+    const discoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
+
+    return discoveryOptions.find(option => option.value === discoveryServiceUrlString);
+}
+
+ConfigEditor.deriveSelectedDiscoveryTypeFromUrl = (discoveryServiceUrlString: string) => {
+    if (!discoveryServiceUrlString) {
+        return DISCOVERY_TYPE_OPTION_VALUES.DEFAULT;
+    }
+
+    const discoveryServiceUrl = ConfigEditor.stringToUrl(discoveryServiceUrlString);
+    if (!discoveryServiceUrl) {
+        return DISCOVERY_TYPE_OPTION_VALUES.URL;
+    }
+
+    const isDiscoveryServiceTlsEnabled = ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl);
+    const defaultDiscoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
+    const defaultUrlMatched = defaultDiscoveryOptions.some(option => option.value === discoveryServiceUrlString);
+
+    return defaultUrlMatched ? DISCOVERY_TYPE_OPTION_VALUES.DEFAULT : DISCOVERY_TYPE_OPTION_VALUES.URL;
+}
+
+ConfigEditor.isDiscoveryServiceUrlTls = (discoveryServiceUrl: URL) => {
+    return discoveryServiceUrl.protocol === "https:";
+}
+
+export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePluginOptionsEditorProps<EspDataSourceOptions>>) {
     const {jsonData} = options;
 
-    const getDiscoveryOptions = (isViya: boolean) => isViya ? ConfigEditor.DISCOVERY_DEFAULT_VIYA_OPTIONS : ConfigEditor.DISCOVERY_DEFAULT_OPTIONS;
-
-    const deriveSelectedOptionFromUrl = (discoveryServiceUrl: string | null, discoveryOptions: Array<SelectableValue<string>>) => {
-        if (!discoveryServiceUrl) {
-            return null;
-        }
-
-        const matchingOption = discoveryOptions.find(option => option.value === discoveryServiceUrl);
-        return matchingOption ?? {value: discoveryServiceUrl, label: discoveryServiceUrl};
-    }
+    const [selectedDiscoveryType, setSelectedDiscoveryType] = useState(() => ConfigEditor.deriveSelectedDiscoveryTypeFromUrl(options.url));
 
     const changePropOptions = (change: Object) => {
         const newOptions = {...options, ...change};
@@ -42,69 +86,99 @@ export function ConfigEditor({options, onOptionsChange}: DataSourcePluginOptions
         changePropOptions({jsonData: newJsonData});
     }
 
-    const handleDiscoveryServiceProviderChange = (selectedOption: SelectableValue<string>) => {
-        changePropOptions({url: selectedOption.value});
+    const handleDiscoveryServiceUrlChange = (newUrl: string) => {
+        changePropOptions({url: newUrl});
     }
 
     const handleTlsSkipVerifyCheckboxChange = (checked: boolean) => {
         changePropOptionsJsonData({tlsSkipVerify: checked});
     }
 
-    const handleInternalNetworkingCheckboxChange = (checked: boolean) => {
-        changePropOptionsJsonData({useInternalNetworking: checked});
+    const handleDiscoveryServiceTypeChange = (selectable: SelectableValue<DISCOVERY_TYPE_OPTION_VALUES>) => {
+        setSelectedDiscoveryType(selectable?.value ?? DISCOVERY_TYPE_OPTION_VALUES.DEFAULT);
     }
 
-    const handleViyaCheckboxChange = (checked: boolean) => {
-        const isViya = checked;
-        // Grafana will ignore attempts to reset datasource URLs and will revert to the previously saved value upon a future save, rather than persist a falsy URL.
-        // To prevent this unwanted behaviour, a default URL is chosen to override the existing URL if possible.
-        const defaultUrl = getDiscoveryOptions(isViya)?.at(0)?.value;
-        changePropOptions({
-            url: defaultUrl ?? "",
-            jsonData: {...jsonData, isViya: isViya}
-        });
+    const handleOauthPassthroughCheckboxChange = (checked: boolean) => {
+        changePropOptionsJsonData({oauthPassThru: checked});
     }
 
-    const mountEffectRefIsViya = useRef(jsonData.isViya);
-    const mountEffectRefChangePropOptionsJsonData = useRef(changePropOptionsJsonData);
-    useEffect(() => {
-        (async () => {
-            const isViya = mountEffectRefIsViya.current;
-            const changePropOptionsJsonData = mountEffectRefChangePropOptionsJsonData.current;
+    const handleTlsCheckboxChange = (checked: boolean) => {
+        const discoveryServiceUrl = ConfigEditor.stringToUrl(options.url);
+        if (!discoveryServiceUrl) {
+            return;
+        }
 
-            let jsonDataChanges = new Map<string, Object>();
-            jsonDataChanges.set("oauthPassThru", true);
+        const isUrlHttps = ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl)
+        if (isUrlHttps !== checked) {
+            discoveryServiceUrl.protocol = checked ? "https:" : "http:";
+            changePropOptions({url: discoveryServiceUrl.toString()});
+        }
+    }
 
-            if (isViya == null) {
-                let isViya: boolean = await fetch(`${window.location.origin}/SASLogon/`).then((response) => response.ok, () => false);
-                jsonDataChanges.set("isViya", isViya);
-            }
-
-            const jsonDataDelta = Object.fromEntries(jsonDataChanges);
-            changePropOptionsJsonData(jsonDataDelta);
-        })()
-    }, []);
-
-    const discoveryOptions = getDiscoveryOptions(jsonData.isViya);
-    const selectedDiscoveryOption = useMemo(() => deriveSelectedOptionFromUrl(options.url, discoveryOptions), [options.url, discoveryOptions]);
+    const discoveryServiceUrl = ConfigEditor.stringToUrl(options.url);
+    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl) : true;
+    const discoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
+    const selectedDiscoveryOption = useMemo(() => ConfigEditor.deriveSelectedOptionFromUrl(options.url), [options.url]);
 
     return (
-        <VerticalGroup>
-            <HorizontalGroup>
-                <InlineLabel width="auto">Discovery service provider</InlineLabel>
-                <Checkbox label="Viya" value={jsonData.isViya ?? false} onChange={e => handleViyaCheckboxChange(e.currentTarget.checked)}/>
-                <Select key={`${jsonData.isViya}`}
-                        options={discoveryOptions} value={selectedDiscoveryOption}
-                        allowCustomValue onCreateOption={customValue => handleDiscoveryServiceProviderChange({value: customValue, label: customValue})}
-                        onChange={handleDiscoveryServiceProviderChange}
+        <Stack direction="column" alignItems="start">
+            <div style={{["margin-bottom" as string]: "10px"}}>
+                <Checkbox label="Do not use TLS  certificate validation (not recommended)" value={jsonData.tlsSkipVerify ?? false}
+                          onChange={e => handleTlsSkipVerifyCheckboxChange(e.currentTarget.checked)}
                 />
-            </HorizontalGroup>
-            <Checkbox label="Use internal networking for ESP connectivity" value={jsonData.useInternalNetworking ?? false}
-                      onChange={e => handleInternalNetworkingCheckboxChange(e.currentTarget.checked)}
-            />
-            <Checkbox label="(Insecure) Skip TLS certificate verification" value={jsonData.tlsSkipVerify ?? false}
-                      onChange={e => handleTlsSkipVerifyCheckboxChange(e.currentTarget.checked)}
-            />
-        </VerticalGroup>
+            </div>
+            <div style={{["display" as string]: "grid", ["grid-template" as string]: "'labels fields' / 1fr auto"}}>
+                <InlineLabel width="auto">Discovery service</InlineLabel>
+                <Stack direction="column" alignItems="start">
+                    <Select options={ConfigEditor.DISCOVERY_TYPE_OPTIONS} value={selectedDiscoveryType} onChange={handleDiscoveryServiceTypeChange}/>
+                    <DiscoveryTypeForm type={selectedDiscoveryType}
+                                       discoveryUrLOptions={discoveryOptions} selectedDiscoveryUrlOption={selectedDiscoveryOption}
+                                       url={options.url} onUrlChange={handleDiscoveryServiceUrlChange}
+                                       oauth={jsonData.oauthPassThru} onOauthChange={handleOauthPassthroughCheckboxChange}
+                                       tls={isDiscoveryServiceTlsEnabled} onTlsChange={handleTlsCheckboxChange}/>
+                </Stack>
+            </div>
+        </Stack>
     );
+}
+
+function DiscoveryTypeForm(props: Readonly<{ type: DISCOVERY_TYPE_OPTION_VALUES
+                                             discoveryUrLOptions: DiscoveryOption[], selectedDiscoveryUrlOption: DiscoveryOption | undefined,
+                                             url: string, onUrlChange: Function
+                                             oauth: boolean | undefined, onOauthChange: Function,
+                                             tls: boolean | undefined, onTlsChange: Function,
+                                           }>) {
+    return (<>{props.type === DISCOVERY_TYPE_OPTION_VALUES.DEFAULT ?
+        <DiscoveryFormDefault discoveryUrLOptions={props.discoveryUrLOptions} selectedDiscoveryUrlOption={props.selectedDiscoveryUrlOption} onUrlChange={props.onUrlChange}
+                              oauth={props.oauth} onOauthChange={props.onOauthChange}
+                              tls={props.tls} onTlsChange={props.onTlsChange}/> :
+        <DiscoveryFormUrl oauth={props.oauth} onOauthChange={props.onOauthChange}
+                          url={props.url} onUrlChange={props.onUrlChange}/>}
+    </>);
+}
+
+function DiscoveryFormDefault(props: Readonly<{ oauth: boolean | undefined, onOauthChange: Function,
+                                                discoveryUrLOptions: DiscoveryOption[], selectedDiscoveryUrlOption: DiscoveryOption | undefined, onUrlChange: Function,
+                                                tls: boolean | undefined, onTlsChange: Function
+                                              }>) {
+    return (<>
+        <Select options={props.discoveryUrLOptions} value={props.selectedDiscoveryUrlOption} onChange={selectable => props.onUrlChange(selectable.value ?? "")}/>
+        <Stack>
+            <OauthCheckbox value={props.oauth} onChange={props.onOauthChange}/>
+            <Checkbox label="TLS" value={props.tls} onChange={e => props.onTlsChange(e.currentTarget.checked)}/>
+        </Stack>
+    </>);
+}
+
+function DiscoveryFormUrl(props: Readonly<{ oauth: boolean | undefined, onOauthChange: Function, url: string, onUrlChange: Function}>) {
+    return (<>
+        <Field>
+            <Input placeholder={"Enter a URL"} width={80} value={props.url} onChange={e => props.onUrlChange(e.currentTarget.value)}/>
+        </Field>
+        <OauthCheckbox value={props.oauth} onChange={props.onOauthChange}/>
+    </>);
+}
+
+function OauthCheckbox(props: Readonly<{value: boolean | undefined, onChange: Function}>) {
+    return (<Checkbox label="OAuth token" value={props.value ?? false} onChange={e => props.onChange(e.currentTarget.checked)}/>);
 }

@@ -93,7 +93,6 @@ type SampleDatasource struct {
 }
 
 type datasourceJsonData struct {
-	IsViya                bool `json:"isViya"`
 	UseInternalNetworking bool `json:"useInternalNetworking"`
 	OauthPassThru         bool `json:"oauthPassThru"`
 	TlsSkipVerify         bool `json:"tlsSkipVerify"`
@@ -113,13 +112,13 @@ func (d *SampleDatasource) Dispose() {
 func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
 
-	var jsonData datasourceJsonData
-	err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &jsonData)
+	datasourceJsonData := datasourceJsonData{UseInternalNetworking: true}
+	err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &datasourceJsonData)
 	if err != nil {
 		return nil, err
 	}
 	var authorizationHeaderPtr *string = nil
-	if jsonData.OauthPassThru && jsonData.IsViya {
+	if datasourceJsonData.OauthPassThru {
 		authorizationHeader := req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName)
 		authorizationHeaderPtr = &authorizationHeader
 	}
