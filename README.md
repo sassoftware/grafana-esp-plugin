@@ -13,9 +13,9 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 ## Getting Started
 The following steps provide an example of how to get started with the plug-in. 
 
-### Prerequisites
+### Check Prerequisites
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
-* The plug-in is automatically installed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can install the plug-in by completing the instructions in [Installing the Plug-in](#installing-the-plug-in).
+* The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
@@ -49,7 +49,7 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards.
 
 1. In SAS Event Stream Processing Studio, click ![Help](src/img/icon-helpmenu.png "Help") on any page and select **Examples**.
 
-2. Install the Sailing example or the ONNX example.
+2. Install the Sailing example or the Computer Vision with ONNX example.
 
 3. Run the example in test mode.
 
@@ -57,7 +57,7 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards.
 
    - [Dashboard for the Sailing example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/sailing#visualizing-objects-in-grafana)
 
-   - [Dashboard for the ONNX example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/onnx_object_detection#visualizing-objects-in-grafana)
+   - [Dashboard for the Computer Vision with ONNX example](https://github.com/sassoftware/esp-studio-examples/tree/main/Advanced/onnx_object_detection#visualizing-objects-in-grafana)
 
 5. Import the dashboard to Grafana.
    
@@ -73,20 +73,20 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards.
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana tutorials](https://grafana.com/tutorials/)
 
-## Installing the Plug-in
-The plug-in is automatically installed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can install the plug-in by completing the following instructions.
+## Deploying the Plug-in
+The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the following instructions.
 ### Prerequisites
 
 * SAS Event Stream Processing running in the SAS Viya platform.
 * A Grafana deployment with the name `grafana`. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace. The deployment scripts provided can install and configure Grafana correctly for you (see below).
 * Ingress for the Grafana deployment, with the root URL `/grafana`. The deployment scripts provided can install and configure Grafana correctly for you (see below).
-* A Linux environment with kubectl installed, to run the plug-in installation script. 
-* Internet access, to enable the plug-in installation script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
+* A Linux environment with kubectl installed, to run the plug-in deployment script. 
+* Internet access, to enable the plug-in deployment script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 
-### Install a Released Version of the Plug-in
+### Deploy a Released Version of the Plug-in
 
-Installation scripts are provided to install the plug-in and configure Grafana. These scripts perform the following tasks:
- * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to install the plug-in.
+Deployment scripts are provided to deploy the plug-in and configure Grafana. These scripts perform the following tasks:
+ * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to deploy the plug-in.
  * Create a new `grafana.ini` file to enable OAuth authentication. Creating this file overwrites any existing Grafana configuration.
  * Configure Grafana as an OAuth client with SAS Logon. Users of Grafana are directed to use SAS Logon.
  * Determine the correct Domain Name for your environment by looking at existing ingresses.
@@ -106,18 +106,18 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
    ```
 
 4. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
-   - The Kubernetes namespace in which SAS Event Stream Processing is installed, _esp-namespace_.
-   - The Kubernetes namespace in which Grafana is installed, _grafana-namespace_.
-   - The _version_ of the plug-in that you want to install. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
-   > **Caution**: Running the installation script overwrites any existing Grafana configuration.
+   - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
+   - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
+   - The _version_ of the plug-in that you want to deploy. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
+   > **Caution**: Running the script overwrites any existing Grafana configuration.
 
    ```
    cd ./install
    bash configure-grafana.sh <esp-namespace> <grafana-namespace> <version>
    ```
 5. Run `register-oauth-client-viya.sh`, adjusting the command to specify the following variables.
-   - The Kubernetes namespace in which SAS Event Stream Processing is installed, _esp-namespace_.
-   - The Kubernetes namespace in which Grafana is installed, _grafana-namespace_.
+   - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
+   - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
    ```
      bash register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
    ```
@@ -133,15 +133,15 @@ Installation scripts are provided to install the plug-in and configure Grafana. 
    ```
 
 
-### (Optional) Build and Install a Privately Signed Version of the Plug-in
+### (Optional) Build and Deploy a Privately Signed Version of the Plug-in
 
 Prerequisites:
-* You have completed the steps in [Install a Released Version of the Plug-in](#install-a-released-version-of-the-plug-in).
+* You have completed the steps in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
 * Go version 1.21 or above.
 * Node version 16 or above.
 * Yarn version 1.22 or above
 
-To build and install a privately signed version of the plug-in:
+To build and deploy a privately signed version of the plug-in:
 
 1. Build back-end plug-in binaries for Linux, Windows, and Darwin.
    ```
@@ -177,7 +177,7 @@ To build and install a privately signed version of the plug-in:
    ```
    kubectl -n <namespace> scale deployment grafana --replicas=0
    ```
-10. Remove the `GF_INSTALL_PLUGINS`` environment variable from the Grafana deployment.
+10. Remove the `GF_INSTALL_PLUGINS` environment variable from the Grafana deployment.
     ```
     kubectl -n <namespace> set env deployment/grafana GF_INSTALL_PLUGINS-
     ```
