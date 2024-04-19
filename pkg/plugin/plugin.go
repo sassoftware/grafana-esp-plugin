@@ -93,7 +93,7 @@ type SampleDatasource struct {
 }
 
 type datasourceJsonData struct {
-	UseInternalNetworking bool `json:"useInternalNetworking"`
+	UseExternalEspUrl bool `json:"useExternalEspUrl"`
 	OauthPassThru         bool `json:"oauthPassThru"`
 	TlsSkipVerify         bool `json:"tlsSkipVerify"`
 }
@@ -112,13 +112,13 @@ func (d *SampleDatasource) Dispose() {
 func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
 
-	datasourceJsonData := datasourceJsonData{UseInternalNetworking: true}
-	err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &datasourceJsonData)
+	var dJsonData datasourceJsonData
+	err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &dJsonData)
 	if err != nil {
 		return nil, err
 	}
 	var authorizationHeaderPtr *string = nil
-	if datasourceJsonData.OauthPassThru {
+	if dJsonData.OauthPassThru {
 		authorizationHeader := req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName)
 		authorizationHeaderPtr = &authorizationHeader
 	}
@@ -132,10 +132,10 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 		}
 
 		var serverUrl string
-		if d.jsonData.UseInternalNetworking {
-			serverUrl = qdto.InternalServerUrl
-		} else {
+		if d.jsonData.UseExternalEspUrl {
 			serverUrl = qdto.ExternalServerUrl
+		} else {
+			serverUrl = qdto.InternalServerUrl
 		}
 
 		var authHeaderToBePassed *string = nil
@@ -151,11 +151,11 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 
 func (d *SampleDatasource) query(_ context.Context, datasourceUid string, qdto querydto.QueryDTO, authorizationHeader *string) backend.DataResponse {
 	var qServerUrl string
-	if d.jsonData.UseInternalNetworking {
+	if d.jsonData.UseExternalEspUrl {
+		qServerUrl = qdto.ExternalServerUrl
+	} else {
 		qServerUrl = qdto.InternalServerUrl
 		log.DefaultLogger.Debug("Using internal ESP server URL from query", "query", qdto)
-	} else {
-		qServerUrl = qdto.ExternalServerUrl
 	}
 
 	s, err := server.FromUrlString(qServerUrl)
