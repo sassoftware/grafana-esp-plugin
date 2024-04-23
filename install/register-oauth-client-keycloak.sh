@@ -5,80 +5,83 @@ set -e -o pipefail -o nounset
 ESP_NAMESPACE="${1}"
 KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
 
-function usage () {
-    echo "Usage: ${0} <esp-namespace> " >&2
-    exit 1
+function usage() {
+  echo "Usage: ${0} <esp-namespace> " >&2
+  exit 1
 }
 
 [ -z "${KUBECONFIG-}" ] && {
-    echo "KUBECONFIG environment variable unset." >&2
-    exit 1
+  echo "KUBECONFIG environment variable unset." >&2
+  exit 1
 }
 
 [ -z "${ESP_NAMESPACE-}" ] && {
-    echo "Usage: ${0} <esp-namespace> <grafana-namespace>" >&2
-    exit 1
+  echo "Usage: ${0} <esp-namespace> <grafana-namespace>" >&2
+  exit 1
 }
 
 ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host')
 
 function check_keycloak_deployment() {
-    if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then
-        echo >&2 "ERROR: No Keycloak deployment found under namespace ${ESP_NAMESPACE}."
-        exit 1
-    fi
+  if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then
+    echo >&2 "ERROR: No Keycloak deployment found under namespace ${ESP_NAMESPACE}."
+    exit 1
+  fi
 
-    _kc_pod=$(kubectl -n "${ESP_NAMESPACE}" get pods -o json |
-        jq -r '.items[] | select(.metadata.name | test("^keycloak-deployment-")) | .metadata.name')
-    [ -n "${_kc_pod}" ] || {
-        echo >&2 "ERROR: No keycloak-deployment-* pod found under namespace ${ESP_NAMESPACE}."
-        exit 1
-    }
+  _kc_pod=$(kubectl -n "${ESP_NAMESPACE}" get pods -o json |
+    jq -r '.items[] | select(.metadata.name | test("^keycloak-deployment-")) | .metadata.name')
+  [ -n "${_kc_pod}" ] || {
+    echo >&2 "ERROR: No keycloak-deployment-* pod found under namespace ${ESP_NAMESPACE}."
+    exit 1
+  }
 
-    _kc_ready=$(kubectl -n "${ESP_NAMESPACE}" get pod "${_kc_pod}" -o json |
-        jq -r '.status.conditions[] | select(.type == "Ready") | .status')
-    [ "${_kc_ready}" == 'True' ] || {
-        echo >&2 "ERROR: Keycloak deployment exists but is not ready. Try again later."
-        exit 1
-    }
+  _kc_ready=$(kubectl -n "${ESP_NAMESPACE}" get pod "${_kc_pod}" -o json |
+    jq -r '.status.conditions[] | select(.type == "Ready") | .status')
+  [ "${_kc_ready}" == 'True' ] || {
+    echo >&2 "ERROR: Keycloak deployment exists but is not ready. Try again later."
+    exit 1
+  }
 }
 
 function check_requirements() {
 
-    if ! kubectl -n "${ESP_NAMESPACE}" get secret keycloak-admin-secret 2>/dev/null 1>&2; then
-        echo >&2 "ERROR: No Keycloak admin secret found under namespace ${ESP_NAMESPACE}."
-        exit 1
-    fi
+  if ! kubectl -n "${ESP_NAMESPACE}" get secret keycloak-admin-secret 2>/dev/null 1>&2; then
+    echo >&2 "ERROR: No Keycloak admin secret found under namespace ${ESP_NAMESPACE}."
+    exit 1
+  fi
 
-    if ! kubectl -n "${ESP_NAMESPACE}" get secret oauth2-proxy-client-secret 2>/dev/null 1>&2; then
-        echo >&2 "ERROR: No OAuth2 Proxy client secret found under namespace ${ESP_NAMESPACE}."
-        exit 1
-    fi
+  if ! kubectl -n "${ESP_NAMESPACE}" get secret oauth2-proxy-client-secret 2>/dev/null 1>&2; then
+    echo >&2 "ERROR: No OAuth2 Proxy client secret found under namespace ${ESP_NAMESPACE}."
+    exit 1
+  fi
 
-    check_keycloak_deployment
+  check_keycloak_deployment
 }
 
 # Fetch access token to perform admin tasks:
 function fetch_keycloak_admin_token() {
-    _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -k -X POST \
-        -H 'Content-Type: application/x-www-form-urlencoded' \
-        -H 'Accept: application/json' \
-        -d "client_id=admin-cli&grant_type=password&username=${KEYCLOAK_ADMIN}&password=${KEYCLOAK_SECRET}")
+  _resp=$(curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/master/protocol/openid-connect/token" -k -X POST \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -H 'Accept: application/json' \
+    -d "client_id=admin-cli" \
+    -d "grant_type=password" \
+    -d "username=${KEYCLOAK_ADMIN}" \
+    --data-urlencode "password=${KEYCLOAK_SECRET}")
 
-    echo "${_resp}" | jq -r '.access_token'
+  echo "${_resp}" | jq -r '.access_token'
 }
 
 function create_role() {
-    _role_name="${1}"
-    _role_repr="{\"name\": \"${_role_name}\", \"clientRole\": true}"
-    curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -k -X POST \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${_token}" \
-        -d "${_role_repr}"
+  _role_name="${1}"
+  _role_repr="{\"name\": \"${_role_name}\", \"clientRole\": true}"
+  curl "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/roles" -k -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${_token}" \
+    -d "${_role_repr}"
 }
 
 function add_protocol_mapper() {
-    _mapper_repr=$(echo -e "
+  _mapper_repr=$(echo -e "
     {
      \"name\": \"GrafanaRoles\",
      \"protocol\": \"openid-connect\",
@@ -94,26 +97,26 @@ function add_protocol_mapper() {
        \"id.token.claim\": \"true\"
        }
     }")
-    _mapper_body=$(echo "${_mapper_repr}" | jq -r -c)
-    curl -k -X POST \
-        "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/protocol-mappers/models" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${_token}" \
-        -d "${_mapper_body}"
+  _mapper_body=$(echo "${_mapper_repr}" | jq -r -c)
+  curl -k -X POST \
+    "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients/${_client_id}/protocol-mappers/models" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${_token}" \
+    -d "${_mapper_body}"
 }
 
 function prepare_keycloak_roles() {
-    _token="$(fetch_keycloak_admin_token)"
-    # Get sas-esp realm clients:
-    _kc_clients=$(curl -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
-    # Get OAuth2 Proxy client ID:
-    _client_id=$(echo "${_kc_clients}" | jq -r --arg opid "${OAUTH_CLIENT_ID}" '.[] | select(.clientId == $opid) | .id')
-    # Create Grafana roles:
-    create_role "grafana-admin"
-    create_role "admin"
-    create_role "editor"
-    # Create Grafana role protocol mapper:
-    add_protocol_mapper
+  _token="$(fetch_keycloak_admin_token)"
+  # Get sas-esp realm clients:
+  _kc_clients=$(curl -k -X GET "https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/admin/realms/sas-esp/clients" -H "Authorization: Bearer ${_token}")
+  # Get OAuth2 Proxy client ID:
+  _client_id=$(echo "${_kc_clients}" | jq -r --arg opid "${OAUTH_CLIENT_ID}" '.[] | select(.clientId == $opid) | .id')
+  # Create Grafana roles:
+  create_role "grafana-admin"
+  create_role "admin"
+  create_role "editor"
+  # Create Grafana role protocol mapper:
+  add_protocol_mapper
 }
 
 _keycloak_admin_secret=$(kubectl -n "${ESP_NAMESPACE}" get secret keycloak-admin-secret --output json)

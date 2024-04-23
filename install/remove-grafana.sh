@@ -20,4 +20,7 @@ NAMESPACE="${1}"
 }
 
 echo "Removing Grafana..."
-kubectl -n "${NAMESPACE}" delete -k ./manifests/
+kubectl -n "${NAMESPACE}" delete ./manifests/grafana.yaml
+
+echo "Removing config map..."
+kubectl -n "${NAMESPACE}" delete ./manifests/config-map.yaml
