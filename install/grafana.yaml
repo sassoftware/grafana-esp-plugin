@@ -10,6 +10,20 @@ spec:
     requests:
       storage: 1Gi
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: grafana
+      protocol: TCP
+      targetPort: 3000
+      port: 80
+  type: ClusterIP
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -77,20 +91,6 @@ spec:
             defaultMode: 420
             name: grafana-ini
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: grafana
-spec:
-  selector:
-    app: grafana
-  ports:
-    - name: grafana
-      protocol: TCP
-      targetPort: 3000
-      port: 80
-  type: ClusterIP
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -103,17 +103,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: TEMPLATE_ESP_DOMAIN
-    http:
-      paths:
-        - path: /grafana
-          pathType: Prefix
-          backend:
-            service:
-              name: grafana
-              port:
+    - host: TEMPLATE_ESP_DOMAIN
+      http:
+        paths:
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
                 name: grafana
+                port:
+                  name: grafana
   tls:
-  - hosts:
-    - "TEMPLATE_ESP_DOMAIN"
-    secretName: TEMPLATE_OAUTH_CLIENT_SECRET
+    - hosts:
+        - "TEMPLATE_ESP_DOMAIN"
