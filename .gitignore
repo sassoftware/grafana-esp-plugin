@@ -23,7 +23,9 @@
 !/package.json
 !/tsconfig.json
 !/yarn.lock
+
 !/install
+/install/manifests/
 
 !/docker
 /docker/dev/data/
