@@ -1298,7 +1298,7 @@
     ua-parser-js "^1.0.32"
     web-vitals "^4.0.1"
 
-"@grafana/runtime@10.4.2":
+"@grafana/runtime@10":
   version "10.4.2"
   resolved "https://registry.npmjs.org/@grafana/runtime/-/runtime-10.4.2.tgz"
   integrity sha512-/YNeIgyydAuzJdu7oSpqssrIEo246j8BQYoq0upH96QVx/J8/6W4R2rkm5yl2uB0GIPzrp6fUcyG8F613bzRbw==
@@ -1334,7 +1334,7 @@
   resolved "https://registry.npmjs.org/@grafana/tsconfig/-/tsconfig-1.2.0-rc1.tgz"
   integrity sha512-+SgQeBQ1pT6D/E3/dEdADqTrlgdIGuexUZ8EU+8KxQFKUeFeU7/3z/ayI2q/wpJ/Kr6WxBBNlrST6aOKia19Ag==
 
-"@grafana/ui@10.4.2":
+"@grafana/ui@10", "@grafana/ui@10.4.2":
   version "10.4.2"
   resolved "https://registry.npmjs.org/@grafana/ui/-/ui-10.4.2.tgz"
   integrity sha512-QAJtAQrCbrkZmDEp+tB6vjOcAFbpkO+uJpQiXxPTw4yIze9N6nvqivG5F+X7/29sEJsEALYKi9LC81KTcq8yBg==
