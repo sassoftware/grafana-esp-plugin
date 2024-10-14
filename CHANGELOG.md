@@ -54,3 +54,5 @@
 ## 7.54.0
 
 Update grafana runtime to 10.4.2.
+
+## 7.55.0
