@@ -17,6 +17,7 @@ The following steps provide an example of how to get started with the plug-in.
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
 * The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
+* For more information about which version of Grafana you can use, see [Releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
 
@@ -143,7 +144,7 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
 
 Prerequisites:
 * You have completed the steps in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
-* Go version 1.21 or above.
+* Go version 1.23 or above.
 * Node version 16 or above.
 * Yarn version 1.22 or above
 
