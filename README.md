@@ -17,7 +17,6 @@ The following steps provide an example of how to get started with the plug-in.
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
 * The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
-* For more information about which version of Grafana you can use, see [Releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 
 To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
 
@@ -85,7 +84,7 @@ The plug-in is automatically deployed with the SAS Event Stream Processing app i
 ### Prerequisites
 
 * SAS Event Stream Processing running in the SAS Viya platform.
-* A Grafana deployment with the name `grafana`. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace. The deployment scripts provided can install and configure Grafana correctly for you (see below).
+* A Grafana deployment with the name `grafana`. The Grafana deployment can be in the same namespace as SAS Event Stream Processing or in a separate namespace. The deployment scripts provided can install and configure Grafana correctly for you (see below). For more information about which version of Grafana you can use, see [Releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
 * Ingress for the Grafana deployment, with the root URL `/grafana`. The deployment scripts provided can install and configure Grafana correctly for you (see below).
 * A Linux environment with kubectl installed, to run the plug-in deployment script. 
 * Internet access, to enable the plug-in deployment script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
