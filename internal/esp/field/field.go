@@ -37,6 +37,7 @@ const (
 	Int
 	Timestamp
 	String
+	Date
 )
 
 var (
@@ -45,7 +46,7 @@ var (
 		"array(i32)": Array,
 		"array(i64)": Array,
 		"blob":       Blob,
-		"date":       String,
+		"date":       Date,
 		"double":     Double,
 		"int32":      Int,
 		"int64":      Int,
