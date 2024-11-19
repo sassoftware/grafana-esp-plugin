@@ -456,13 +456,8 @@ func parseFieldValue(rawValue any, sub *subscription, schemaType field.SchemaTyp
 		signed := int64(rawValue.(uint64))
 		fieldValue = time.UnixMicro(signed)
 	case field.Date:
-		switch rawValue.(type) {
-			case uint64:
-				signed := int64(rawValue.(uint64))
-				fieldValue = time.UnixMilli(signed * 1000)
-			default :
-				fieldValue = rawValue
-		}
+		signed := int64(rawValue.(uint64))
+		fieldValue = time.Unix(signed, 0)
 	default:
 		fieldValue = rawValue
 	}
@@ -505,6 +500,14 @@ func parseJsonFieldValue(rawValue any, schemaType field.SchemaType) any {
 		}
 
 		fieldValue = time.UnixMicro(fieldValueInt)
+	case field.Date:
+		fieldValueInt, err := strconv.ParseInt(fieldValueString, 10, 64)
+		if err != nil {
+			log.DefaultLogger.Error(fmt.Sprintf("Cannot convert field value to type timestamp: %s", fieldValueString))
+			panic(err)
+		}
+
+		fieldValue = time.Unix(fieldValueInt, 0)
 	default:
 		err := fmt.Errorf("unsupported field type %d", schemaType)
 		log.DefaultLogger.Error(err.Error())
@@ -553,7 +556,7 @@ func (espWsClient *EspWsClient) validateField(name string, value any, sub *subsc
 		}
 	case field.Date:
 		switch value.(type) {
-		case string, uint64:
+		case uint64:
 			return nil
 		}
 	default:
