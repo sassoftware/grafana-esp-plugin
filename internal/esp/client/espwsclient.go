@@ -503,7 +503,7 @@ func parseJsonFieldValue(rawValue any, schemaType field.SchemaType) any {
 	case field.Date:
 		fieldValueInt, err := strconv.ParseInt(fieldValueString, 10, 64)
 		if err != nil {
-			log.DefaultLogger.Error(fmt.Sprintf("Cannot convert field value to type timestamp: %s", fieldValueString))
+			log.DefaultLogger.Error(fmt.Sprintf("Cannot convert field value to type date: %s", fieldValueString))
 			panic(err)
 		}
 
