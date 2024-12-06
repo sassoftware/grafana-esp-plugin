@@ -61,3 +61,5 @@ Update grafana runtime to 11
 Update react to 18
 Update grafana compatability to 11.3.0
 Fix issue with esp date type fields
+
+## 7.57.0
