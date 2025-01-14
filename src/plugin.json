@@ -25,11 +25,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/sassoftware/esp-grafana-plugin"
+        "url": "https://github.com/sassoftware/grafana-esp-plugin"
       },
       {
         "name": "License",
-        "url": "https://github.com/sassoftware/esp-grafana-plugin/blob/main/LICENSE"
+        "url": "https://github.com/sassoftware/grafana-esp-plugin/blob/main/LICENSE"
       }
     ],
     "screenshots": [],
