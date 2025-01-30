@@ -23,10 +23,13 @@ jobs:
       shell: bash
       run: |
           echo $(ls)
+          cd ./src 
+          echo $(ls)
+          cd ..
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           declare -a directoriesToScan=(
-          	src
+            src
             pkg
             internal
           )
@@ -40,7 +43,8 @@ jobs:
           done
           cd ./include/ # Snyk can't handle scanning properly unless scanning inside the current directory.
           echo $(ls)
-          cd src
+          echo $pwd
+          cd ./src
           echo "Inside include/src"
           echo $(ls)
           cd ..
