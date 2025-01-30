@@ -43,9 +43,9 @@ jobs:
           done
           cd ./include/ # Snyk can't handle scanning properly unless scanning inside the current directory.
           echo $(ls)
-          echo $pwd
-          cd ./src
-          echo "Inside include/src"
+          echo $(pwd)
+          cd ./internal/
+          echo "Inside include/internal"
           echo $(ls)
           cd ..
           # npx snyk code test --json | npx snyk-to-html -o ../report.html
