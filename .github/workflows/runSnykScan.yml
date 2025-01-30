@@ -22,7 +22,7 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          cd $HOME
+          cd ${GITHUB_WORKSPACE}/grafana-esp-plugin
           echo $PWD
           cd scan
           bash generate-snyk-report.sh
