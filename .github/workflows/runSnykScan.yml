@@ -38,7 +38,8 @@ jobs:
           	ln -s $target ./include/$includedDir
           done
           cd ./include/ # Snyk can't handle scanning properly unless scanning inside the current directory.
-          npx snyk code test --json | npx snyk-to-html -o ../report.html
+          # npx snyk code test --json | npx snyk-to-html -o ../report.html
+          npx snyk code test --json
           cd ../
           rm -rf ./include
           cd ..
