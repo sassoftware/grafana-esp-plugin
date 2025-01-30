@@ -22,6 +22,23 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          SNYK_API_KEY= ${{ inputs.SNYK_API_KEY }}
           cd scan
-          bash generate-snyk-report.sh
+          set -e
+          npx snyk auth ${{ inputs.SNYK_API_KEY }}
+          declare -a directoriesToScan=(
+          	src
+            pkg
+            internal
+          )
+          rm -rf ./include/
+          for includedDir in ${directoriesToScan[*]}
+          do
+          	mkdir -p $(dirname ./include/$includedDir)
+          	target=$(realpath ../$includedDir)
+          	ln -s $target ./include/$includedDir
+          done
+          cd ./include/ # Snyk can't handle scanning properly unless scanning inside the current directory.
+          npx snyk code test --json | npx snyk-to-html -o ../report.html
+          cd ../
+          rm -rf ./include
+          cd ..
