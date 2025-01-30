@@ -1,0 +1,28 @@
+name: Run Snyk Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      SNYK_API_KEY:
+        description: 'Snyk API Key needed to run security scan'
+        required: true
+        type: string
+
+jobs:
+ 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+      # shallow clone doesn't fetch tags, so cdp-release-management plugin doesn't work without this
+          fetch-depth: 0
+    - name: Run Snyk
+      shell: bash
+      run: |
+          cd $HOME
+          echo $PWD
+          cd scan
+          bash generate-snyk-report.sh
