@@ -1,0 +1,31 @@
+name: Run Security Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      SNYK_API_KEY:
+        description: 'Snyk API Key needed to run security scan'
+        required: true
+        type: string
+
+jobs:
+  runScans:
+    runs-on: on-prem-test # Run this on the build runner pool
+    container:
+      image: pulp.unx.sas.com/cdp-release-x64_oci_linux_2-docker-latest/build-env:latest
+      options: --user root
+    steps:
+    - name: Checkout
+        uses: actions/checkout@v4
+        with:
+        # shallow clone doesn't fetch tags, so cdp-release-management plugin doesn't work without this
+            fetch-depth: 0
+    - name: Pull IoT Monitoring Repo
+        shell: bash
+        run: |
+            git clone https://github.com/sassoftware/grafana-esp-plugin.git  
+    - name: Run scans   
+        shell: bash
+        run: |
+            cd $HOME/scan
+            bash generate-snyk-report.sh
