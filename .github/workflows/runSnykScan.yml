@@ -22,6 +22,6 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          echo $(ls)
+          SNYK_API_KEY= ${{ inputs.SNYK_API_KEY }}
           cd scan
           bash generate-snyk-report.sh
