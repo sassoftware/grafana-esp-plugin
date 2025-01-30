@@ -14,7 +14,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     env:
-      SNYK_API_KEY: ${{secrets[github.event.inputs.SNYK_API_KEY]}}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -26,7 +25,7 @@ jobs:
       run: |
           cd scan
           set -e
-          npx snyk auth ${{ env.SNYK_API_KEY }}
+          npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           declare -a directoriesToScan=(
           	src
             pkg
