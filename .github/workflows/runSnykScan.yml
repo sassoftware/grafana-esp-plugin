@@ -22,7 +22,7 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          cd scan
+          echo $pwd
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           declare -a directoriesToScan=(
@@ -41,5 +41,5 @@ jobs:
           # npx snyk code test --json | npx snyk-to-html -o ../report.html
           npx snyk code test --json
           cd ../
+          echo $pwd
           rm -rf ./include
-          cd ..
