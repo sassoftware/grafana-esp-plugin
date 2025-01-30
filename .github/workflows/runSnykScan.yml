@@ -22,8 +22,6 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          echo $PWD
           echo $(ls)
-          cd grafana-esp-plugin
           cd scan
           bash generate-snyk-report.sh
