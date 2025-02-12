@@ -29,6 +29,7 @@ data:
     signout_redirect_url = TEMPLATE_SIGNOUT_REDIRECT_URL
 
     [auth.generic_oauth]
+    use_refresh_token = true
     tls_skip_verify_insecure = true
     enabled = true
     name = OAuth

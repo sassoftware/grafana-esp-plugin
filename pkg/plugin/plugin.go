@@ -94,8 +94,8 @@ type SampleDatasource struct {
 
 type datasourceJsonData struct {
 	UseExternalEspUrl bool `json:"useExternalEspUrl"`
-	OauthPassThru         bool `json:"oauthPassThru"`
-	TlsSkipVerify         bool `json:"tlsSkipVerify"`
+	OauthPassThru     bool `json:"oauthPassThru"`
+	TlsSkipVerify     bool `json:"tlsSkipVerify"`
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -409,7 +409,7 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 		serversData, discoveredServers, err := d.fetchDiscoverableServers(authHeaderPtr)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())
-			body := newSerializedCallResourceResponseErrorBody("Unable to fetch discoverable ESP servers.")
+			body := newSerializedCallResourceResponseErrorBody("Unable to fetch discoverable ESP servers: " + err.Error())
 			response := &backend.CallResourceResponse{
 				Status: http.StatusInternalServerError,
 				Body:   body,
@@ -449,8 +449,8 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 	var discoveryEndpointUrl = d.discoveryEndpointUrl.String() + "/grafana/discovery"
 	log.DefaultLogger.Debug("Calling discovery endpoint", "discoveryEndpointUrl", discoveryEndpointUrl)
 
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryEndpointUrl, nil)
 	if err != nil {
 		log.DefaultLogger.Error("Unable to create discovery request.", "error", err)
@@ -468,7 +468,19 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, nil, fmt.Errorf("received unexpected HTTP status code: %d", resp.StatusCode)
+		switch resp.StatusCode {
+		case 401:
+			var message = fmt.Sprintf("Connection to discovery endpoint rejected due to unauthorized credentials.")
+			var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
+			log.DefaultLogger.Debug("Discovery service authorization failure",
+				"authorizationHeaderPresent", hasAuthHeader,
+				"oauthPassThru", d.jsonData.OauthPassThru,
+			)
+			return nil, nil, fmt.Errorf(message)
+		default:
+			var message = fmt.Sprintf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
+			return nil, nil, fmt.Errorf(message)
+		}
 	}
 
 	serversData, err := io.ReadAll(resp.Body)
