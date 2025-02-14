@@ -19,7 +19,8 @@ jobs:
       with:
       # shallow clone doesn't fetch tags, so cdp-release-management plugin doesn't work without this
           fetch-depth: 0
-    - name: RunSnyk
+    - name: Run Snyk
+      id: snyk
       shell: bash
       run: |
           set -e
@@ -29,11 +30,11 @@ jobs:
           npx snyk test --sarif > sca.sarif
           echo "SCA scan complete with no security issues"
     - name: Update summary success message
-      if: job.steps.RunSnyk.outcome  == 'success'
+      if: job.steps.snyk.outcome  == 'success'
       run: echo '✅ Snyk Scans completed without any security concerns!' >> $GITHUB_STEP_SUMMARY
       
     - name: Update summary with security issues
-      if: job.steps.RunSnyk.outcome  != 'success'
+      if: job.steps.snyk.outcome  != 'success'
       run: echo '❌ Snyk Scans completed with some security issues. Check Scan results for more detials!' >> $GITHUB_STEP_SUMMARY
     
     - name: Upload SAST scans
