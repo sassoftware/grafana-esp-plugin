@@ -65,3 +65,5 @@ Fix issue with esp date type fields
 ## 7.57.0
 
 ## 7.58.0
+
+## 7.59.0
