@@ -26,9 +26,15 @@ jobs:
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           echo "SAST scan:"
           npx snyk code test --sarif > sast.sarif
-          #echo "SCA scan:"
-          #npx snyk test --sarif > sca.sarif
-    - name: Upload scans
+          echo "SCA scan:"
+          npx snyk test --sarif > sca.sarif
+    - name: Upload SAST scans
       uses: actions/upload-artifact@v4
       with:
           path: sast.sarif
+          name: sast
+    - name: Upload SCA scans
+      uses: actions/upload-artifact@v4
+      with:
+          path: sca.sarif
+          name: sca
