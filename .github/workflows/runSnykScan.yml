@@ -30,11 +30,11 @@ jobs:
           npx snyk test --sarif > sca.sarif
           echo "SCA scan complete with no security issues"
     - name: Update summary success message
-      if: job.steps.snyk.outcome  == 'success'
+      if: ${{ steps.snyk.outcome }}  == 'success'
       run: echo '✅ Snyk Scans completed without any security concerns!' >> $GITHUB_STEP_SUMMARY
       
     - name: Update summary with security issues
-      if: job.steps.snyk.outcome  != 'success'
+      if: ${{ steps.snyk.outcome }} == 'failure' 
       run: echo '❌ Snyk Scans completed with some security issues. Check Scan results for more detials!' >> $GITHUB_STEP_SUMMARY
     
     - name: Upload SAST scans
