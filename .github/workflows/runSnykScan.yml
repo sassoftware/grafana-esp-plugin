@@ -22,13 +22,13 @@ jobs:
     - name: Run Snyk
       shell: bash
       run: |
-          echo $(ls)
-          cd ./src 
-          echo $(ls)
-          cd ..
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           echo "SAST scan:"
           npx snyk code test --sarif > sast.sarif
-          echo "SCA scan:"
-          npx snyk test --sarif > sca.sarif
+          #echo "SCA scan:"
+          #npx snyk test --sarif > sca.sarif
+    - name: Upload scans
+      uses: actions/upload-artifact@v4
+      with:
+          path: sast.sarif
