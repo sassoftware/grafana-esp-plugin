@@ -25,18 +25,18 @@ jobs:
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
           npx snyk code test --sarif > sast.sarif
-          echo "SAST scan complete"
-          npx snyk test --sarif
-          echo "SCA scan done"
+          echo "SAST scan complete with no security issues"
           npx snyk test --sarif > sca.sarif
-          echo "SCA scan complete"
+          echo "SCA scan complete with no security issues"
     - name: Upload SAST scans
       uses: actions/upload-artifact@v4
+      if: always() 
       with:
           path: sast.sarif
           name: sast
     - name: Upload SCA scans
       uses: actions/upload-artifact@v4
+      if: always()
       with:
           path: sca.sarif
           name: sca
