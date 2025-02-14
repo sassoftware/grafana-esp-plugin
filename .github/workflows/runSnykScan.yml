@@ -28,31 +28,7 @@ jobs:
           cd ..
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
-          #echo "SCA scan:"
-          #npx snyk test --sarif
+          echo "SCA scan:"
+          npx snyk test --sarif
           echo "SAST scan:"
           npx snyk code test --sarif
-          declare -a directoriesToScan=(
-            src
-            pkg
-            internal
-          )
-          rm -rf ./include/
-          for includedDir in ${directoriesToScan[*]}
-          do
-          	mkdir -p $(dirname ./include/$includedDir)
-          	target=$(realpath ../$includedDir)
-            echo $target
-          	ln -s $target ./include/$includedDir
-          done
-          cd ./include/ # Snyk can't handle scanning properly unless scanning inside the current directory.
-          echo $(ls)
-          echo $(pwd)
-          cd ./internal/
-          echo "Inside include/internal"
-          echo $(ls)
-          cd ..
-          # npx snyk code test --json | npx snyk-to-html -o ../report.html
-          npx snyk code test --json
-          cd ../
-          rm -rf ./include
