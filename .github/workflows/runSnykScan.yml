@@ -28,7 +28,7 @@ jobs:
           cd ..
           set -e
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
-          echo "SCA scan:"
-          npx snyk test --sarif
           echo "SAST scan:"
-          npx snyk code test --sarif
+          npx snyk code test --sarif > sast.sarif
+          echo "SCA scan:"
+          npx snyk test --sarif > sca.sarif
