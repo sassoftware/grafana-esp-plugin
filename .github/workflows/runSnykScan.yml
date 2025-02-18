@@ -24,11 +24,15 @@ jobs:
       shell: bash
       run: |
           set -e
+          scanError=false
           npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
-          npx snyk code test --sarif > sast.sarif || true
+          npx snyk code test --sarif > sast.sarif || scanError=true
           echo "SAST scan complete with no security issues"
-          npx snyk test --sarif > sca.sarif || true
+          npx snyk test --sarif > sca.sarif || scanError=true
           echo "SCA scan complete with no security issues"
+          if [ "$scanError" = true ] ; then
+            exit 1
+          fi
     - name: Update summary success message
       if: success()
       run: echo '✅ Snyk Scans completed without any security concerns!' >> $GITHUB_STEP_SUMMARY
