@@ -19,17 +19,22 @@ jobs:
       with:
       # shallow clone doesn't fetch tags, so cdp-release-management plugin doesn't work without this
           fetch-depth: 0
+    - name: Mask Password
+      run: |
+        API_PASSWORD=$(jq -r '.inputs.SNYK_API_KEY' $GITHUB_EVENT_PATH)
+        echo ::add-mask::$API_PASSWORD
+        echo API_PASSWORD=$API_PASSWORD >> $GITHUB_ENV
     - name: Run Snyk
       id: snyk
       shell: bash
       run: |
           set -e
           scanError=false
-          npx snyk auth ${{ inputs.SNYK_API_KEY }} && set +x
+          npx snyk auth ${{ env.API_PASSWORD }} && set +x
           npx snyk code test --sarif > sast.sarif || scanError=true
-          echo "SAST scan complete with no security issues"
+          echo "SAST scan complete"
           npx snyk test --sarif > sca.sarif || scanError=true
-          echo "SCA scan complete with no security issues"
+          echo "SCA scan complete"
           if [ "$scanError" = true ] ; then
             exit 1
           fi
