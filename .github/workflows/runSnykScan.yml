@@ -31,9 +31,9 @@ jobs:
           set -e
           scanError=false
           npx snyk auth ${{ env.API_PASSWORD }} && set +x
-          npx snyk code test --sarif > sast.sarif || scanError=true
+          npx snyk code test  --severity-threshold=low > sast.json || scanError=true
           echo "SAST scan complete"
-          npx snyk test --sarif > sca.sarif || scanError=true
+          npx snyk test --severity-threshold=low > sca.json || scanError=true
           echo "SCA scan complete"
           if [ "$scanError" = true ] ; then
             exit 1
@@ -50,12 +50,12 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always() 
       with:
-          path: sast.sarif
+          path: sast.json
           name: sast
     
     - name: Upload SCA scans
       uses: actions/upload-artifact@v4
       if: always()
       with:
-          path: sca.sarif
+          path: sca.json
           name: sca
