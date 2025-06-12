@@ -1,6 +1,6 @@
 {
   "name": "sasesp-plugin",
-  "version": "7.62.0",
+  "version": "7.63.0",
   "description": "SAS Event Stream Processing Data Source",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
