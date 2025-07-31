@@ -41,8 +41,6 @@ spec:
     spec:
       securityContext:
         fsGroup: 472
-        supplementalGroups:
-          - 0
       containers:
         - name: grafana
           image: docker.io/grafana/grafana:TEMPLATE_GRAFANA_VERSION
