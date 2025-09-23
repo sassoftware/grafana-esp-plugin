@@ -33,7 +33,7 @@
       }
     ],
     "screenshots": [],
-    "version": "%VERSION% (%DATE_TIME_NOW%)",
+    "version": "%VERSION%",
     "updated": "%DATE_TIME_NOW%"
   },
   "dependencies": {
@@ -41,4 +41,5 @@
     "plugins": []
   }
 }
+
 
