@@ -15,6 +15,7 @@ The following steps provide an example of how to get started with the plug-in.
 
 ### Check Prerequisites
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
+* A Grafana instance that is configured to use the same OAuth provider as SAS Event Stream Processing, typically SAS Logon.
 * The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
 
@@ -88,11 +89,13 @@ The plug-in is automatically deployed with the SAS Event Stream Processing app i
 * Ingress for the Grafana deployment, with the root URL `/grafana`. The deployment scripts provided can install and configure Grafana correctly for you (see below).
 * A Linux environment with kubectl installed, to run the plug-in deployment script. 
 * Internet access, to enable the plug-in deployment script to download the plug-in from [https://github.com/sassoftware/grafana-esp-plugin/releases](https://github.com/sassoftware/grafana-esp-plugin/releases).
+>**Note**: If you have installed SAS VIYA monitoring then the `grafana` deployment and namespace may be elsewhere and manual intervention will be required, it is recommended to run the following scripts as a dry run, and manually copy of the oauth sections of the grafana.ini configuration.
+
 
 ### Deploy a Released Version of the Plug-in
 
 Deployment scripts are provided to deploy the plug-in and configure Grafana. These scripts perform the following tasks:
- * Modify the Grafana deployment by adding the GF_INSTALL_PLUGINS environment variable to enable Grafana to deploy the plug-in.
+ * Modify the Grafana deployment by adding the GF_PLUGINS_PREINSTALL_SYNC environment variable to enable Grafana to deploy the plug-in.
  * Create a new `grafana.ini` file to enable OAuth authentication. Creating this file overwrites any existing Grafana configuration.
  * Configure Grafana as an OAuth client with SAS Logon. Users of Grafana are directed to use SAS Logon.
  * Determine the correct Domain Name for your environment by looking at existing ingresses.

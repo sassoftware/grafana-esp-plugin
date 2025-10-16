@@ -16,7 +16,7 @@ KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"; export KEYCLOAK_SUBPATH
 OAUTH_TYPE="${OAUTH_TYPE:-viya}";
 DRY_RUN="${DRY_RUN:-false}"
 INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
-GRAFANA_VERSION="${GRAFANA_VERSION:-11.3.0}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-12.1.0}"
 
 function check_requirements() {
   [ -z "${KUBECONFIG-}" ] && {
@@ -66,7 +66,17 @@ function generate_manifests() {
     sed -i 's|TEMPLATE_ESP_DOMAIN|'$ESP_DOMAIN'|g' $file
     sed -i 's|TEMPLATE_OAUTH_CLIENT_ID|'$OAUTH_CLIENT_ID'|g' $file
     sed -i 's|TEMPLATE_OAUTH_CLIENT_SECRET|'$OAUTH_CLIENT_SECRET'|g' $file
-    sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$ESP_PLUGIN_SOURCE'|g' $file
+
+
+    if [[ "$GRAFANA_VERSION" =~ ^"11" ]]; then
+      sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_11'|g' $file
+      sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_11'|g' $file
+    else
+      sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_12'|g' $file
+      sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
+    fi
+
+
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
 
     if [[ "${DRY_RUN}" == true ]]; then
@@ -91,6 +101,12 @@ echo "Fetching required deployment information..."
 . get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
 ESP_PLUGIN_SOURCE="https://github.com/sassoftware/grafana-esp-plugin/releases/download/v$ESP_PLUGIN_VERSION/sasesp-plugin-$ESP_PLUGIN_VERSION.zip"
+
+TEMPLATE_ESP_PLUGIN_VAR_11="GF_INSTALL_PLUGINS"
+PLUGIN_STRING_GRAFANA_11="${ESP_PLUGIN_SOURCE};sasesp-plugin,volkovlabs-image-panel"
+
+TEMPLATE_ESP_PLUGIN_VAR_12="GF_PLUGINS_PREINSTALL_SYNC"
+PLUGIN_STRING_GRAFANA_12="sasesp-plugin@${ESP_PLUGIN_VERSION}@${ESP_PLUGIN_SOURCE},volkovlabs-image-panel"
 
 if [ "${OAUTH_TYPE}" == "viya" ]; then
 
