@@ -31,25 +31,6 @@
 * replace channelquerystore with more generic synchronous map implementation ([0444544](https://github.com/sassoftware/grafana-esp-plugin/commit/0444544c0051289dd2156e3051023d48a15599d4))
 * treat syncmap.Set calls with nil value as Delete calls ([d704aaa](https://github.com/sassoftware/grafana-esp-plugin/commit/d704aaacd8b77f8d45a355c0c508dbe18d474370))
 
-## 7.45.0
-
-## 
-
-## 7.46.0
-
-## 7.47.0
-
-## 7.48.0
-
-## 7.49.0
-
-## 7.50.0
-
-## 7.51.0
-
-## 7.52.0
-
-## 7.53.0
 
 ## 7.54.0
 
@@ -62,26 +43,8 @@ Update react to 18
 Update grafana compatability to 11.3.0
 Fix issue with esp date type fields
 
-## 7.57.0
+## 7.67.1
 
-## 7.58.0
-
-## 7.59.0
-
-## 7.60.0
-
-## 7.61.0
-
-## 7.62.0
-
-## 7.63.0
-
-## 7.64.0
-
-## 7.65.0
-
-## 7.65.0
-
-## 7.66.0
-
-## 7.66.0
+Update grafana runtime to 12.1.0
+Update grafana compatability to 12.2.0
+Update install scripts to work with grafana 12.x

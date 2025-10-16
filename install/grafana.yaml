@@ -45,8 +45,8 @@ spec:
         - name: grafana
           image: docker.io/grafana/grafana:TEMPLATE_GRAFANA_VERSION
           env:
-            - name: GF_INSTALL_PLUGINS
-              value: TEMPLATE_ESP_PLUGIN_SOURCE;sasesp-plugin,volkovlabs-image-panel
+            - name: TEMPLATE_ESP_PLUGIN_VAR
+              value: TEMPLATE_ESP_PLUGIN_SOURCE
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

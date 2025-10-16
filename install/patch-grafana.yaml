@@ -9,8 +9,8 @@ spec:
       containers:
       - name: grafana
         env:
-          - name: GF_INSTALL_PLUGINS
-            value: TEMPLATE_ESP_PLUGIN_SOURCE;sasesp-plugin,volkovlabs-image-panel
+          - name: TEMPLATE_ESP_PLUGIN_VAR
+            value: TEMPLATE_ESP_PLUGIN_SOURCE
         volumeMounts:
         - mountPath: /etc/grafana/grafana.ini
           name: grafana-config
