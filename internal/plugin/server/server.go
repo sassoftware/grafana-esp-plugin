@@ -67,7 +67,7 @@ func generateServerUrl(isTls bool, host string, portPtr *uint16, serverPath stri
 		serverPath = serverPath[1:]
 	}
 
-	p := path.Join(serverPath, "eventStreamProcessing/v2/connect")
+	p := path.Join(serverPath, "connect")
 
 	urlString := fmt.Sprintf("%s://%s/%s", urlScheme, host, p)
 	wsConnectionUrl, err := url.Parse(urlString)
