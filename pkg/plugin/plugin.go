@@ -49,7 +49,7 @@ var (
 
 // NewSampleDatasource creates a new datasource instance.
 func NewSampleDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	discoveryUrl, err := url.Parse(settings.URL)
+	url, err := url.Parse(settings.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func NewSampleDatasource(ctx context.Context, settings backend.DataSourceInstanc
 
 	return &SampleDatasource{
 		httpClient:           cl,
-		discoveryEndpointUrl: *discoveryUrl,
+		url: *url,
 		jsonData:             jsonData,
 		channelQueryMap:      syncmap.New[string, query.Query](),
 		serverUrlTrustedMap:  syncmap.New[string, bool](),
@@ -89,7 +89,7 @@ type SampleDatasource struct {
 	httpClient           *http.Client
 	jsonData             datasourceJsonData
 	serverUrlTrustedMap  *syncmap.SyncMap[string, bool]
-	discoveryEndpointUrl url.URL
+	url                  url.URL
 }
 
 type datasourceJsonData struct {
@@ -216,16 +216,15 @@ func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHe
 		return newCheckHealthErrorResponse(message), nil
 	}
 
-	request.Header.Set("Accept", "application/json")
 	resp, err := d.httpClient.Do(request)
 
 	if err != nil {
-		var message = "Failed to connect to the discovery service"
+		var message = "Failed to connect to datasource"
 		log.DefaultLogger.Error(message, "error", err)
 		return newCheckHealthErrorResponse(message), nil
 	}
 
-	log.DefaultLogger.Debug("Studio response", "status", resp.Status)
+	log.DefaultLogger.Debug("Datasource response", "status", resp.Status)
 
 	switch resp.StatusCode {
 	case 200:
@@ -236,13 +235,13 @@ func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHe
 	case 401:
 		var message = fmt.Sprintf("Connection rejected due to unauthorized credentials")
 		var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
-		log.DefaultLogger.Debug("Discovery service authorization failure",
+		log.DefaultLogger.Debug("endpoint authorization failure",
 			"authorizationHeaderPresent", hasAuthHeader,
 			"oauthPassThru", d.jsonData.OauthPassThru,
 		)
 		return newCheckHealthErrorResponse(message), nil
 	default:
-		var message = fmt.Sprintf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
+		var message = fmt.Sprintf("The datasource sent an unexpected HTTP status code: %d", resp.StatusCode)
 		return newCheckHealthErrorResponse(message), nil
 	}
 }
@@ -409,9 +408,9 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 		serversData, discoveredServers, err := d.fetchDiscoverableServers(authHeaderPtr)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())
-			body := newSerializedCallResourceResponseErrorBody("Unable to fetch discoverable ESP servers: " + err.Error())
+			body := newSerializedCallResourceResponseErrorBody("Unable to fetch ESP server information: " + err.Error())
 			response := &backend.CallResourceResponse{
-				Status: http.StatusInternalServerError,
+				Status: http.StatusBadGateway,
 				Body:   body,
 			}
 			return sender.Send(response)
@@ -421,7 +420,7 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 
 		responseBody, err := json.Marshal(callResourceResponseBody{Data: *serversData})
 		if err != nil {
-			errorMessage := "Unable to serialize discovery response."
+			errorMessage := "Unable to serialize ESP server information response."
 			response := &backend.CallResourceResponse{
 				Status: http.StatusInternalServerError,
 				Body:   newSerializedCallResourceResponseErrorBody(errorMessage),
@@ -446,7 +445,7 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 }
 
 func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte, *[]discoveredServer, error) {
-	var discoveryEndpointUrl = d.discoveryEndpointUrl.String() + "/grafana/discovery"
+	var discoveryEndpointUrl = d.url.String() + "/grafana/discovery"
 	log.DefaultLogger.Debug("Calling discovery endpoint", "discoveryEndpointUrl", discoveryEndpointUrl)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
