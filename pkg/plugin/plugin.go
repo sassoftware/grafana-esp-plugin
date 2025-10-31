@@ -8,6 +8,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"grafana-esp-plugin/internal/plugin/syncmap"
@@ -96,6 +97,7 @@ type datasourceJsonData struct {
 	UseExternalEspUrl bool `json:"useExternalEspUrl"`
 	OauthPassThru     bool `json:"oauthPassThru"`
 	TlsSkipVerify     bool `json:"tlsSkipVerify"`
+	DirectToEsp     bool `json:"DirectToEsp"`
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -139,7 +141,7 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 		}
 
 		var authHeaderToBePassed *string = nil
-		if authorizationHeaderPtr != nil && d.isServerUrlTrusted(serverUrl, true, authorizationHeaderPtr) {
+		if authorizationHeaderPtr != nil && d.isServerUrlTrusted(serverUrl, !d.jsonData.DirectToEsp, authorizationHeaderPtr) {
 			authHeaderToBePassed = authorizationHeaderPtr
 		}
 
@@ -205,15 +207,29 @@ func handleQueryError(errorMessage string, err error) backend.DataResponse {
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	var discoveryServiceUrl = req.PluginContext.DataSourceInstanceSettings.URL
-	var endpointUrl = discoveryServiceUrl + "/apiMeta"
-	log.DefaultLogger.Debug("Checking connection to discovery service", "endpointUrl", endpointUrl)
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, nil)
+	var dJsonData datasourceJsonData
+	err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &dJsonData)
 	if err != nil {
-		var message = "The application was unable to create a valid HTTP request"
-		log.DefaultLogger.Error(message, "error", err)
-		return newCheckHealthErrorResponse(message), nil
+		return nil, err
+	}
+
+	var url = req.PluginContext.DataSourceInstanceSettings.URL
+
+	var request *http.Request
+	if dJsonData.DirectToEsp {
+		request, err = createEspHostHealthCheckRequest(ctx, url)
+		if err != nil {
+			var message = "The application was unable to create a valid datasource HTTP request"
+			log.DefaultLogger.Error(message, "error", err)
+			return newCheckHealthErrorResponse(message), nil
+		}
+	} else {
+		request, err = createDiscoveryHostHealthCheckRequest(ctx, url)
+		if err != nil {
+			var message = "The application was unable to create a valid datasource HTTP request"
+			log.DefaultLogger.Error(message, "error", err)
+			return newCheckHealthErrorResponse(message), nil
+		}
 	}
 
 	resp, err := d.httpClient.Do(request)
@@ -244,6 +260,32 @@ func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHe
 		var message = fmt.Sprintf("The datasource sent an unexpected HTTP status code: %d", resp.StatusCode)
 		return newCheckHealthErrorResponse(message), nil
 	}
+}
+
+func createDiscoveryHostHealthCheckRequest(ctx context.Context, discoveryServiceUrl string) (*http.Request, error) {
+	var endpointUrl = discoveryServiceUrl + "/apiMeta"
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	return request, nil
+}
+
+func createEspHostHealthCheckRequest(ctx context.Context, espUrl string) (*http.Request, error) {
+	var endpointUrl = espUrl + "/runningProjects"
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Accept", "application/xml")
+
+	return request, nil
 }
 
 func newCheckHealthErrorResponse(message string) *backend.CheckHealthResult {
@@ -390,12 +432,6 @@ func newSerializedCallResourceResponseErrorBody(errorMessage string) []byte {
 	return errorResponseBody
 }
 
-type discoveredServer struct {
-	InternalUrl string `json:"url"`
-	ExternalUrl string `json:"externalUrl"`
-	Trusted     bool   `json:"trusted"`
-}
-
 func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
 	var response backend.CallResourceResponse
 	switch req.Path {
@@ -405,7 +441,8 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 			authHeader := req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName)
 			authHeaderPtr = &authHeader
 		}
-		serversData, discoveredServers, err := d.fetchDiscoverableServers(authHeaderPtr)
+
+		espServerInfoList, err := d.fetchServerInfo(authHeaderPtr)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())
 			body := newSerializedCallResourceResponseErrorBody("Unable to fetch ESP server information: " + err.Error())
@@ -416,9 +453,18 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 			return sender.Send(response)
 		}
 
-		d.updateServerTrust(*discoveredServers)
+		espServerInfoListJson, err := json.Marshal(espServerInfoList)
+		if err != nil {
+			errorMessage := "Unable to serialize ESP server information."
+			response := &backend.CallResourceResponse{
+				Status: http.StatusInternalServerError,
+				Body:   newSerializedCallResourceResponseErrorBody(errorMessage),
+			}
+			log.DefaultLogger.Error(errorMessage, "error", err)
+			return sender.Send(response)
+		}
 
-		responseBody, err := json.Marshal(callResourceResponseBody{Data: *serversData})
+		responseBody, err := json.Marshal(callResourceResponseBody{Data: espServerInfoListJson})
 		if err != nil {
 			errorMessage := "Unable to serialize ESP server information response."
 			response := &backend.CallResourceResponse{
@@ -444,7 +490,7 @@ func (d *SampleDatasource) CallResource(_ context.Context, req *backend.CallReso
 	return sender.Send(&response)
 }
 
-func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte, *[]discoveredServer, error) {
+func (d *SampleDatasource) fetchServerInfoFromDiscoveryEndpoint(authHeader *string) (*[]espServerInfo, error) {
 	var discoveryEndpointUrl = d.url.String() + "/grafana/discovery"
 	log.DefaultLogger.Debug("Calling discovery endpoint", "discoveryEndpointUrl", discoveryEndpointUrl)
 
@@ -453,7 +499,7 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryEndpointUrl, nil)
 	if err != nil {
 		log.DefaultLogger.Error("Unable to create discovery request.", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	if authHeader != nil {
@@ -463,7 +509,7 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 	resp, err := d.httpClient.Do(request)
 	if err != nil {
 		log.DefaultLogger.Error("Unable to receive discovery response.", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
@@ -475,37 +521,41 @@ func (d *SampleDatasource) fetchDiscoverableServers(authHeader *string) (*[]byte
 				"authorizationHeaderPresent", hasAuthHeader,
 				"oauthPassThru", d.jsonData.OauthPassThru,
 			)
-			return nil, nil, fmt.Errorf(message)
+			return nil, fmt.Errorf(message)
 		default:
 			var message = fmt.Sprintf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
-			return nil, nil, fmt.Errorf(message)
+			return nil, fmt.Errorf(message)
 		}
 	}
 
 	serversData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
-		return nil, nil, fmt.Errorf("unable to read discovery response")
+		return nil, fmt.Errorf("unable to read discovery response")
 	}
 
-	var discoveredServers []discoveredServer
-	err = json.Unmarshal(serversData, &discoveredServers)
+	var espServerInfo []espServerInfo
+	err = json.Unmarshal(serversData, &espServerInfo)
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
-		return &serversData, nil, fmt.Errorf("unable to unmarshal discovery response")
+		return nil, fmt.Errorf("unable to unmarshal discovery response")
 	}
 
-	return &serversData, &discoveredServers, nil
+	return &espServerInfo, nil
 }
 
 func (d *SampleDatasource) isServerUrlTrusted(url string, fetchIfMissing bool, authHeader *string) bool {
+	if d.jsonData.DirectToEsp {
+		return true
+	}
+
 	isServerUrlTrusted, err := d.serverUrlTrustedMap.Get(url)
 	if err == nil {
 		return *isServerUrlTrusted
 	}
 
 	if fetchIfMissing {
-		_, discoveredServers, fetchErr := d.fetchDiscoverableServers(authHeader)
+		discoveredServers, fetchErr := d.fetchServerInfoFromDiscoveryEndpoint(authHeader)
 		if fetchErr != nil {
 			log.DefaultLogger.Error("Unable to fetch trusted status of server URL", "url", url, "error", err)
 			return false
@@ -520,9 +570,188 @@ func (d *SampleDatasource) isServerUrlTrusted(url string, fetchIfMissing bool, a
 	return false
 }
 
-func (d *SampleDatasource) updateServerTrust(discoveredServers []discoveredServer) {
+func (d *SampleDatasource) updateServerTrust(discoveredServers []espServerInfo) {
 	for _, discoveredServer := range discoveredServers {
-		d.serverUrlTrustedMap.Set(discoveredServer.InternalUrl, &discoveredServer.Trusted)
-		d.serverUrlTrustedMap.Set(discoveredServer.ExternalUrl, &discoveredServer.Trusted)
+		d.serverUrlTrustedMap.Set(discoveredServer.Url.String(), &discoveredServer.Trusted)
+		d.serverUrlTrustedMap.Set(discoveredServer.ExternalUrl.String(), &discoveredServer.Trusted)
 	}
+}
+
+type espRunningProjectsFromXml struct {
+	Projects []struct {
+		Name              string `xml:"name,attr"`
+		ContinuousQueries []struct {
+			Name    string `xml:"name,attr"`
+			Windows struct {
+				Windows []struct {
+					Name   string `xml:"name,attr"`
+					Fields []struct {
+						Name string `xml:"name,attr"`
+					} `xml:"schema>fields>field"`
+				} `xml:",any"`
+			} `xml:"windows"`
+		} `xml:"contqueries>contquery"`
+	} `xml:"project"`
+}
+
+type espServerInfo struct {
+	Projects    []project `json:"projects"`
+	Name        string    `json:"name"`
+	Url         url.URL   `json:"url,string"`
+	ExternalUrl url.URL   `json:"externalUrl,string"`
+	Trusted     bool      `json:"trusted"`
+}
+
+type project struct {
+	Name              string            `json:"name"`
+	ContinuousQueries []continuousQuery `json:"continuousQueries"`
+}
+
+type continuousQuery struct {
+	Name    string   `json:"name"`
+	Windows []window `json:"windows"`
+}
+
+type window struct {
+	Name   string  `json:"name"`
+	Fields []field `json:"fields"`
+}
+
+type field struct {
+	Name string `json:"name"`
+}
+
+func (d *SampleDatasource) fetchServerInfo(authHeader *string) (*[]espServerInfo, error) {
+	var espServerInfoList *[]espServerInfo
+
+	if d.jsonData.DirectToEsp {
+		returnedEspServerInfo, err := d.fetchServerInfoFromEspInstance(authHeader)
+		if err != nil {
+			return nil, err
+		}
+		espServerInfoList = &[]espServerInfo{*returnedEspServerInfo}
+	} else {
+		espServerInfoList, err := d.fetchServerInfoFromDiscoveryEndpoint(authHeader)
+		if err != nil {
+			return nil, err
+		}
+
+		d.updateServerTrust(*espServerInfoList)
+	}
+
+	return espServerInfoList, nil
+}
+
+func (d *SampleDatasource) fetchServerInfoFromEspInstance(authHeader *string) (*espServerInfo, error) {
+	var espRunningProjectsEndpoint = d.url.String() + "/runningProjects?schema=true"
+	log.DefaultLogger.Debug("Calling ESP server endpoint", "espRunningProjectsEndpoint", espRunningProjectsEndpoint)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, espRunningProjectsEndpoint, nil)
+	if err != nil {
+		log.DefaultLogger.Error("Unable to create ESP server running projects request.", "error", err)
+		return nil, err
+	}
+
+	if authHeader != nil {
+		request.Header.Set(backend.OAuthIdentityTokenHeaderName, *authHeader)
+	}
+
+	resp, err := d.httpClient.Do(request)
+	if err != nil {
+		log.DefaultLogger.Error("Unable to receive running projects response.", "error", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		switch resp.StatusCode {
+		case 401:
+			var message = fmt.Sprintf("Connection to ESP server endpoint rejected due to unauthorized credentials.")
+			var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
+			log.DefaultLogger.Debug("ESP server authorization failure",
+				"authorizationHeaderPresent", hasAuthHeader,
+				"oauthPassThru", d.jsonData.OauthPassThru,
+			)
+			return nil, fmt.Errorf(message)
+		default:
+			var message = fmt.Sprintf("The ESP server sent an unexpected HTTP status code: %d", resp.StatusCode)
+
+			responseBody, err := io.ReadAll(resp.Body)
+			if err == nil {
+				log.DefaultLogger.Debug("Unexpected ESP server response", "responseBody", string(responseBody))
+			} else {
+				log.DefaultLogger.Debug("Unexpected ESP server response. Unable to serialize response body.")
+			}
+
+			return nil, fmt.Errorf(message)
+		}
+	}
+
+	projectsData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, fmt.Errorf("unable to read discovery response")
+	}
+
+	log.DefaultLogger.Debug("Received ESP server running projects response", "response", string(projectsData))
+
+	var projects espRunningProjectsFromXml
+	err = xml.Unmarshal(projectsData, &projects)
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, fmt.Errorf("unable to unmarshal ESP running projects response")
+	}
+
+	espServerInfo := projects.toEspServerInfo(d.url)
+
+	return &espServerInfo, nil
+}
+
+func (t *espRunningProjectsFromXml) toEspServerInfo(url url.URL) espServerInfo {
+	var espServerName string
+	if len(t.Projects) < 1 {
+		espServerName = "(Unknown)"
+	} else {
+		espServerName = t.Projects[0].Name
+	}
+
+	var projects []project
+	for _, p := range t.Projects {
+		var continuousQueries []continuousQuery
+		for _, cq := range p.ContinuousQueries {
+			var windows []window
+			for _, w := range cq.Windows.Windows {
+				var fields []field
+				for _, f := range w.Fields {
+					fields = append(fields, field{Name: f.Name})
+				}
+				windows = append(windows, window{Name: w.Name, Fields: fields})
+			}
+			continuousQueries = append(continuousQueries, continuousQuery{Name: cq.Name, Windows: windows})
+		}
+		projects = append(projects, project{Name: p.Name, ContinuousQueries: continuousQueries})
+	}
+
+	switch url.Scheme {
+	case "http":
+		url.Scheme = "ws"
+	case "https":
+		url.Scheme = "wss"
+	}
+
+	return espServerInfo{projects, espServerName, url, url, true}
+}
+
+func (t espServerInfo) MarshalJSON() ([]byte, error) {
+	type Alias espServerInfo
+	return json.Marshal(&struct {
+		Url         string `json:"url"`
+		ExternalUrl string `json:"externalUrl"`
+		*Alias
+	}{
+		Url:         t.Url.String(),
+		ExternalUrl: t.ExternalUrl.String(),
+		Alias:       (*Alias)(&t),
+	})
 }

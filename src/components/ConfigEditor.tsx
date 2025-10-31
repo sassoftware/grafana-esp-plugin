@@ -23,10 +23,11 @@ ConfigEditor.DISCOVERY_DEFAULT_OPTIONS_TLS = [
     {label: 'SAS Event Stream Processing Studio', value: 'https://sas-event-stream-processing-studio-app/SASEventStreamProcessingStudio'},
 ];
 
-enum DISCOVERY_TYPE_OPTION_VALUES {DEFAULT, URL}
-ConfigEditor.DISCOVERY_TYPE_OPTIONS = [
-    {label: "Internal", value: DISCOVERY_TYPE_OPTION_VALUES.DEFAULT},
-    {label: "URL", value: DISCOVERY_TYPE_OPTION_VALUES.URL}
+enum HOST_TYPE_OPTION_VALUES {DISCOVERY_DEFAULT, DISCOVERY_URL, ESP_URL}
+ConfigEditor.HOST_TYPE_OPTIONS = [
+    {label: "Internal Discovery Service", value: HOST_TYPE_OPTION_VALUES.DISCOVERY_DEFAULT},
+    {label: "Discovery Service URL", value: HOST_TYPE_OPTION_VALUES.DISCOVERY_URL},
+    {label: "Direct ESP Server URL", value: HOST_TYPE_OPTION_VALUES.ESP_URL}
 ];
 
 ConfigEditor.stringToUrl = (urlString: string) => {
@@ -44,37 +45,41 @@ ConfigEditor.getDiscoveryOptions = (tls: boolean) => tls ? ConfigEditor.DISCOVER
 
 ConfigEditor.deriveSelectedOptionFromUrl = (discoveryServiceUrlString: string) => {
     const discoveryServiceUrl = ConfigEditor.stringToUrl(discoveryServiceUrlString);
-    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl) : true;
+    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isUrlTls(discoveryServiceUrl) : true;
     const discoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
 
     return discoveryOptions.find(option => option.value === discoveryServiceUrlString);
 }
 
-ConfigEditor.deriveSelectedDiscoveryTypeFromUrl = (discoveryServiceUrlString: string) => {
+ConfigEditor.deriveSelectedHostTypeFromUrl = (discoveryServiceUrlString: string, directToEsp: boolean) => {
+    if (directToEsp) {
+        return HOST_TYPE_OPTION_VALUES.ESP_URL;
+    }
+
     if (!discoveryServiceUrlString) {
-        return DISCOVERY_TYPE_OPTION_VALUES.DEFAULT;
+        return HOST_TYPE_OPTION_VALUES.DISCOVERY_DEFAULT;
     }
 
     const discoveryServiceUrl = ConfigEditor.stringToUrl(discoveryServiceUrlString);
     if (!discoveryServiceUrl) {
-        return DISCOVERY_TYPE_OPTION_VALUES.URL;
+        return HOST_TYPE_OPTION_VALUES.DISCOVERY_URL;
     }
 
-    const isDiscoveryServiceTlsEnabled = ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl);
+    const isDiscoveryServiceTlsEnabled = ConfigEditor.isUrlTls(discoveryServiceUrl);
     const defaultDiscoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
     const defaultUrlMatched = defaultDiscoveryOptions.some(option => option.value === discoveryServiceUrlString);
 
-    return defaultUrlMatched ? DISCOVERY_TYPE_OPTION_VALUES.DEFAULT : DISCOVERY_TYPE_OPTION_VALUES.URL;
+    return defaultUrlMatched ? HOST_TYPE_OPTION_VALUES.DISCOVERY_DEFAULT : HOST_TYPE_OPTION_VALUES.DISCOVERY_URL;
 }
 
-ConfigEditor.isDiscoveryServiceUrlTls = (discoveryServiceUrl: URL) => {
-    return discoveryServiceUrl.protocol === "https:";
+ConfigEditor.isUrlTls = (url: URL) => {
+    return url.protocol === "https:";
 }
 
 export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePluginOptionsEditorProps<EspDataSourceOptions>>) {
     const {jsonData} = options;
 
-    const [selectedDiscoveryType, setSelectedDiscoveryType] = useState(() => ConfigEditor.deriveSelectedDiscoveryTypeFromUrl(options.url));
+    const [selectedHostType, setSelectedHostType] = useState(() => ConfigEditor.deriveSelectedHostTypeFromUrl(options.url, jsonData.directToEsp));
 
     const changePropOptions = (change: Object) => {
         const newOptions = {...options, ...change};
@@ -94,8 +99,10 @@ export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePlug
         changePropOptionsJsonData({tlsSkipVerify: checked});
     }
 
-    const handleDiscoveryServiceTypeChange = (selectable: SelectableValue<DISCOVERY_TYPE_OPTION_VALUES>) => {
-        setSelectedDiscoveryType(selectable?.value ?? DISCOVERY_TYPE_OPTION_VALUES.DEFAULT);
+    const handleHostTypeChange = (selectable: SelectableValue<HOST_TYPE_OPTION_VALUES>) => {
+        setSelectedHostType(selectable?.value ?? HOST_TYPE_OPTION_VALUES.DISCOVERY_DEFAULT);
+
+        changePropOptionsJsonData({directToEsp: selectable?.value === HOST_TYPE_OPTION_VALUES.ESP_URL});
     }
 
     const handleOauthPassthroughCheckboxChange = (checked: boolean) => {
@@ -108,7 +115,7 @@ export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePlug
             return;
         }
 
-        const isUrlHttps = ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl)
+        const isUrlHttps = ConfigEditor.isUrlTls(discoveryServiceUrl)
         if (isUrlHttps !== checked) {
             discoveryServiceUrl.protocol = checked ? "https:" : "http:";
             changePropOptions({url: discoveryServiceUrl.toString()});
@@ -116,7 +123,7 @@ export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePlug
     }
 
     const discoveryServiceUrl = ConfigEditor.stringToUrl(options.url);
-    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isDiscoveryServiceUrlTls(discoveryServiceUrl) : true;
+    const isDiscoveryServiceTlsEnabled = discoveryServiceUrl ? ConfigEditor.isUrlTls(discoveryServiceUrl) : true;
     const discoveryOptions = ConfigEditor.getDiscoveryOptions(isDiscoveryServiceTlsEnabled);
     const selectedDiscoveryOption = useMemo(() => ConfigEditor.deriveSelectedOptionFromUrl(options.url), [options.url]);
 
@@ -128,10 +135,10 @@ export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePlug
                 />
             </div>
             <div style={{["display" as string]: "grid", ["grid-template" as string]: "'labels fields' / 1fr auto"}}>
-                <InlineLabel width="auto">Discovery service</InlineLabel>
+                <InlineLabel width="auto">Host type</InlineLabel>
                 <Stack direction="column" alignItems="start">
-                    <Select options={ConfigEditor.DISCOVERY_TYPE_OPTIONS} value={selectedDiscoveryType} onChange={handleDiscoveryServiceTypeChange}/>
-                    <DiscoveryTypeForm type={selectedDiscoveryType}
+                    <Select options={ConfigEditor.HOST_TYPE_OPTIONS} value={selectedHostType} onChange={handleHostTypeChange}/>
+                    <HostTypeForm type={selectedHostType}
                                        discoveryUrLOptions={discoveryOptions} selectedDiscoveryUrlOption={selectedDiscoveryOption}
                                        url={options.url} onUrlChange={handleDiscoveryServiceUrlChange}
                                        oauth={jsonData.oauthPassThru} onOauthChange={handleOauthPassthroughCheckboxChange}
@@ -142,13 +149,13 @@ export function ConfigEditor({options, onOptionsChange}: Readonly<DataSourcePlug
     );
 }
 
-function DiscoveryTypeForm(props: Readonly<{ type: DISCOVERY_TYPE_OPTION_VALUES
+function HostTypeForm(props: Readonly<{ type: HOST_TYPE_OPTION_VALUES
                                              discoveryUrLOptions: DiscoveryOption[], selectedDiscoveryUrlOption: DiscoveryOption | undefined,
                                              url: string, onUrlChange: Function
                                              oauth: boolean | undefined, onOauthChange: Function,
                                              tls: boolean | undefined, onTlsChange: Function,
                                            }>) {
-    return (<>{props.type === DISCOVERY_TYPE_OPTION_VALUES.DEFAULT ?
+    return (<>{props.type === HOST_TYPE_OPTION_VALUES.DISCOVERY_DEFAULT ?
         <DiscoveryFormDefault discoveryUrLOptions={props.discoveryUrLOptions} selectedDiscoveryUrlOption={props.selectedDiscoveryUrlOption} onUrlChange={props.onUrlChange}
                               oauth={props.oauth} onOauthChange={props.onOauthChange}
                               tls={props.tls} onTlsChange={props.onTlsChange}/> :
