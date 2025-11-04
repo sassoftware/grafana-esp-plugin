@@ -743,7 +743,7 @@ func (t *espRunningProjectsFromXml) toEspServerInfo(url url.URL) espServerInfo {
 	return espServerInfo{projects, espServerName, url, url, true}
 }
 
-func (t espServerInfo) MarshalJSON() ([]byte, error) {
+func (t *espServerInfo) MarshalJSON() ([]byte, error) {
 	type Alias espServerInfo
 	return json.Marshal(&struct {
 		Url         string `json:"url"`
@@ -752,6 +752,36 @@ func (t espServerInfo) MarshalJSON() ([]byte, error) {
 	}{
 		Url:         t.Url.String(),
 		ExternalUrl: t.ExternalUrl.String(),
-		Alias:       (*Alias)(&t),
+		Alias:       (*Alias)(t),
 	})
+}
+
+func (t *espServerInfo) UnmarshalJSON(data []byte) error {
+	type Alias espServerInfo
+	serializedJson := &struct {
+		Url         string `json:"url"`
+		ExternalUrl string `json:"externalUrl"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	err := json.Unmarshal(data, &serializedJson)
+	if err != nil {
+		return err
+	}
+
+	deserializedUrl, err := url.Parse(serializedJson.Url)
+	if err != nil {
+		return err
+	}
+	t.Url = *deserializedUrl
+
+	deserializedExternalUrl, err := url.Parse(serializedJson.ExternalUrl)
+	if err != nil {
+		return err
+	}
+	t.ExternalUrl = *deserializedExternalUrl
+
+	return nil
 }
