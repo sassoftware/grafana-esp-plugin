@@ -631,7 +631,8 @@ func (d *SampleDatasource) fetchServerInfo(authHeader *string) (*[]espServerInfo
 		}
 		espServerInfoList = &[]espServerInfo{*returnedEspServerInfo}
 	} else {
-		espServerInfoList, err := d.fetchServerInfoFromDiscoveryEndpoint(authHeader)
+		var err error
+		espServerInfoList, err = d.fetchServerInfoFromDiscoveryEndpoint(authHeader)
 		if err != nil {
 			return nil, err
 		}
