@@ -17,22 +17,24 @@ The following steps provide an example of how to get started with the plug-in.
 * A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
 * A Grafana instance that is configured to use the same OAuth provider as SAS Event Stream Processing, typically SAS Logon.
 * The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
-* An ESP project that can be run in either SAS Event Stream Processing Studio or SAS Event Stream Manager.
+* An ESP project that can be run in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or SAS Event Stream Processing Server.
 
-To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio or SAS Event Stream Manager.  
+To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or SAS Event Stream Processing Server.  
 
 ### Add the SAS Event Stream Processing Data Source
 1. In the **Data Sources** section find and select **SAS Event Stream Processing Data Source**.
 2. (Optional) If you are using a self-signed certificate, you can select the **Do not use TLS certificate validation (not recommended)** check box. This option is not suitable for production use.
-3. A discovery service is provided by SAS Event Stream Processing Studio and SAS Event Stream Manager and is used to connect to ESP servers. Use the **Discovery service** drop-down menu to select one of the following options:
-   - **Internal**: This option assumes that Grafana has been deployed in the same namespace as SAS Event Stream Processing Studio and SAS Event Stream Manager, using the instructions in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
-   - **URL**: Use this option to explicitly specify the location of the discovery service. 
-4. If you selected **Internal** in the previous step:
-   1. A further drop-down menu is displayed. Select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio** as the discovery service.
-   2. The **TLS** check box is selected by default. If the discovery service does not use TLS, clear this check box.
-5. Select the **OAuth token** check box if OAuth tokens are used by the discovery service and you want to forward the token to the discovery service and ESP servers.
-6. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
-7. (Optional) Repeat steps 1-4 to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as a data source too.
+3. Choose how to connect to your ESP server:
+   - **Discovery Service**: A discovery service is provided by SAS Event Stream Processing Studio and SAS Event Stream Manager and is used to connect to ESP servers. Use the **Host type** drop-down menu to select one of the following options:
+     - **Internal Discovery Service**: This option assumes that Grafana has been deployed in the same namespace as SAS Event Stream Processing Studio and SAS Event Stream Manager, using the instructions in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
+     - **Discovery Service URL**: Use this option to explicitly specify the location of the discovery service.
+   - **Direct ESP Server URL**: Use this option to connect directly to a specific ESP server instance by providing its URL and connection details. This option bypasses the
+     discovery service and is useful if you know the exact ESP server endpoint you want to use.
+4. If you selected an **Internal Discovery Service** in the previous step, a further drop-down menu is displayed. Select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio** as the discovery service.
+5. The **TLS** check box is selected by default. If the data source does not use TLS, clear this check box.
+6. Select the **OAuth token** check box if OAuth tokens are used by the discovery service and you want to forward the token to the discovery service and ESP servers.
+7. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
+8. (Optional) Repeat steps 1-4 to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as a data source too.
 
 ### Connect a Panel to SAS Event Stream Processing as a Data Source
 1. Create a new dashboard and add a panel.
