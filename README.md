@@ -14,35 +14,36 @@ Here is an example of a Grafana dashboard for an ESP project. This dashboard rel
 The following steps provide an example of how to get started with the plug-in. 
 
 ### Check Prerequisites
-* A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Azure Marketplace or SAS Viya platform.
+* A running deployment of SAS Event Stream Processing in a Kubernetes environment such as the Microsoft Marketplace or SAS Viya platform.
 * A Grafana instance that is configured to use the same OAuth provider as SAS Event Stream Processing, typically SAS Logon.
-* The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
-* An ESP project that can be run in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or SAS Event Stream Processing Server.
+* The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
+* An ESP project that can be run in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or ESP server.
 
-To visualise data, you must have an ESP project running in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or SAS Event Stream Processing Server.  
+To visualize data, you must have an ESP project running in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or ESP server.
 
 ### Add the SAS Event Stream Processing Data Source
 1. In the **Data Sources** section find and select **SAS Event Stream Processing Data Source**.
 2. (Optional) If you are using a self-signed certificate, you can select the **Do not use TLS certificate validation (not recommended)** check box. This option is not suitable for production use.
 3. Choose how to connect to your ESP server:
    - **Discovery Service**: A discovery service is provided by SAS Event Stream Processing Studio and SAS Event Stream Manager and is used to connect to ESP servers. Use the **Host type** drop-down menu to select one of the following options:
-     - **Internal Discovery Service**: This option assumes that Grafana has been deployed in the same namespace as SAS Event Stream Processing Studio and SAS Event Stream Manager, using the instructions in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
-     - **Discovery Service URL**: Use this option to explicitly specify the location of the discovery service.
+     - **Internal Discovery Service**: This option assumes that Grafana has been deployed in the same namespace as SAS Event Stream Processing Studio and SAS Event Stream Manager.
+       Follow the instructions in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
+     - **Discovery Service URL**: Use this option to specify the location of the discovery service.
    - **Direct ESP Server URL**: Use this option to connect directly to a specific ESP server instance by providing its URL and connection details. This option bypasses the
      discovery service and is useful if you know the exact ESP server endpoint you want to use.
-4. If you selected an **Internal Discovery Service** in the previous step, a further drop-down menu is displayed. Select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio** as the discovery service.
-5. The **TLS** check box is selected by default. If the data source does not use TLS, clear this check box.
+4. If you selected **Internal Discovery Service** in the previous step, another drop-down menu is displayed. Select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio** as the discovery service, depending on where you prefer to run ESP projects.
+5. By default, the **TLS** check box is selected. If the data source does not use TLS, clear this check box.
 6. Select the **OAuth token** check box if OAuth tokens are used by the discovery service and you want to forward the token to the discovery service and ESP servers.
 7. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
-8. (Optional) Repeat steps 1-4 to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as a data source too.
+8. (Optional) Repeat [steps 1-4](#add-the-sas-event-stream-processing-data-source) to add another data source. For example, if you added SAS Event Stream Manager as a data source, you can repeat the steps to add SAS Event Stream Processing Studio as an additional data source if needed.
 
 ### Connect a Panel to SAS Event Stream Processing as a Data Source
 1. Create a new dashboard and add a panel.
 2. In the **Query** tab at the bottom of the panel editor, select the data source that you configured previously.</br>The plug-in discovers running instances of ESP servers by connecting to your chosen data source. When the connection is successful, the **Query** tab shows drop-down menus that are related to SAS Event Stream Processing.
-3. Use the **ESP server** drop-down menu to select the ESP server that you want to query. You can filter the available options by entering a keyword and then selecting the desired ESP server in the drop-down menu.
-4. Use the **ESP project**, **Continuous query**, and **Window** drop-down menus to select appropriate values until you are able to narrow the query down to the desired target window in the ESP project.</br>When an available target window is selected, the plug-in establishes a connection and starts querying for new events.
-5. In the **Fields** drop-down menu, select the fields (from the window in your ESP project) that you want to visualize.
-6. In the top right corner of the screen, if required, change the visualization type from the default of **Time series** to a visualization type that suits your ESP project.
+3. From the **ESP server** drop-down menu, select the ESP server that you want to query. You can filter the available options by entering a keyword and then selecting the desired ESP server from the drop-down menu.
+4. From the **ESP project**, **Continuous query**, and **Window** drop-down menus, select appropriate values until you are able to narrow the query down to the desired target window in the ESP project.</br>When an available target window is selected, the plug-in establishes a connection and starts querying for new events.
+5. From the **Fields** drop-down menu, select the fields (from the window in your ESP project) that you want to visualize.
+6. If required, change the visualization type from the default of **Time series** to a visualization type that suits your ESP project.
 
 > **Note**: 
 > - You can reuse existing queries across multiple panels, by selecting **--Dashboard--** as a data source and targeting the panel that contains the existing query.
@@ -58,9 +59,9 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards.
 
 1. In SAS Event Stream Processing Studio, click ![Help](src/img/icon-helpmenu.png "Help") on any page and select **Examples**.
 
-2. Install the Sailing example or the Computer Vision with ONNX example.
+2. Install the Sailing example project or the Computer Vision with ONNX example project.
 
-3. Run the example in test mode.
+3. Run the example project (for example using test mode).
 
 4. Download the Grafana dashboard to your computer:
 
@@ -83,7 +84,7 @@ Some SAS Event Stream Processing Studio examples include Grafana dashboards.
 - [Grafana tutorials](https://grafana.com/tutorials/)
 
 ## Deploying the Plug-in
-The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Azure Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the following instructions.
+The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the following instructions.
 ### Prerequisites
 
 * SAS Event Stream Processing running in the SAS Viya platform.
@@ -101,7 +102,7 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
  * Create a new `grafana.ini` file to enable OAuth authentication. Creating this file overwrites any existing Grafana configuration.
  * Configure Grafana as an OAuth client with SAS Logon. Users of Grafana are directed to use SAS Logon.
  * Determine the correct Domain Name for your environment by looking at existing ingresses.
- * Optionally install Grafana for you.
+ * Optionally automate the installation of Grafana for you.
 
 1. Set the correct Kubernetes configuration file for your environment.
    ```
@@ -147,12 +148,12 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
 ### (Optional) Build and Deploy a Privately Signed Version of the Plug-in
 
 Prerequisites:
-* You have completed the steps in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
+* You must complete the steps in [Deploy a Released Version of the Plug-in](#deploy-a-released-version-of-the-plug-in).
 * Go version 1.23 or above.
 * Node version 16 or above.
 * Yarn version 1.22 or above
 
-To build and deploy a privately signed version of the plug-in:
+To build and deploy a privately signed version of the plug-in, do the following steps:
 
 1. Build back-end plug-in binaries for Linux, Windows, and Darwin.
    ```
