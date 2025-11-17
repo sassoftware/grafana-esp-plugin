@@ -48,3 +48,5 @@ Fix issue with esp date type fields
 Update grafana runtime to 12.1.0
 Update grafana compatability to 12.2.0
 Update install scripts to work with grafana 12.x
+
+## 7.67.0
