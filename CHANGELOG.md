@@ -50,3 +50,5 @@ Update grafana compatability to 12.2.0
 Update install scripts to work with grafana 12.x
 
 ## 7.67.0
+
+## 7.68.0
