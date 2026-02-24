@@ -20,7 +20,14 @@ NAMESPACE="${1}"
 }
 
 echo "Removing Grafana..."
-kubectl -n "${NAMESPACE}" delete ./manifests/grafana.yaml
+kubectl -n "${NAMESPACE}" delete -f ./manifests/grafana.yaml
 
 echo "Removing config map..."
-kubectl -n "${NAMESPACE}" delete ./manifests/config-map.yaml
+kubectl -n "${NAMESPACE}" delete -f ./manifests/config-map.yaml
+
+
+if [[ "${CONTOUR_PROXY}" == true ]]; then
+  kubectl -n "${NAMESPACE}" delete -f ./manifests/grafana-http-proxy.yaml
+else
+  kubectl -n "${NAMESPACE}" delete -f ./manifests/grafana-ingress.yaml
+fi

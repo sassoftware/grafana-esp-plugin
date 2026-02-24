@@ -77,7 +77,14 @@ function remove_keycloak_roles() {
 check_requirements
 
 echo "Fetching required deployment information..."
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host')
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host') || {
+  echo "Failed to get ESP domain from ingress, trying http proxy"
+}
+if [ -z "${ESP_DOMAIN}" ]; then
+  ESP_DOMAIN=$(kubectl get httpproxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o jsonpath="{.spec.virtualhost.fqdn}") || {
+    echo "Failed to get ESP domain from http proxy"
+  }
+fi
 export ESP_DOMAIN
 
 _oauth2_proxy_secret=$(kubectl -n "${ESP_NAMESPACE}" get secret oauth2-proxy-client-secret --output json)
