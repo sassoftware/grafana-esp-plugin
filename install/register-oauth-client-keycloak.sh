@@ -20,7 +20,15 @@ function usage() {
   exit 1
 }
 
-ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host')
+ESP_DOMAIN=$(kubectl -n "${ESP_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.spec.rules[0].host') || {
+  echo "Failed to get ESP domain from ingress, trying http proxy"
+}
+
+if [ -z "${ESP_DOMAIN}" ]; then
+  ESP_DOMAIN=$(kubectl get httpproxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o jsonpath="{.spec.virtualhost.fqdn}") || {
+    echo "Failed to get ESP domain from http proxy"
+  }
+fi
 
 function check_keycloak_deployment() {
   if ! kubectl -n "${ESP_NAMESPACE}" get deployment keycloak-deployment 2>/dev/null 1>&2; then

@@ -100,6 +100,7 @@ echo "Fetching required deployment information..."
 #Work out the domain names
 . get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
+ESP_PLUGIN_VERSION="${ESP_PLUGIN_VERSION#v}"
 ESP_PLUGIN_SOURCE="https://github.com/sassoftware/grafana-esp-plugin/releases/download/v$ESP_PLUGIN_VERSION/sasesp-plugin-$ESP_PLUGIN_VERSION.zip"
 
 TEMPLATE_ESP_PLUGIN_VAR_11="GF_INSTALL_PLUGINS"
@@ -155,6 +156,12 @@ if [[ "${INSTALL_GRAFANA}" == true ]]; then
   echo "Installing grafana"
   kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
   #No need to patch grafana as it will already be installed with the plugin and config
+  if [[ "${CONTOUR_PROXY}" == true ]]; then
+    kubectl patch HTTPProxy -n "${GRAFANA_NAMESPACE}" sas-httpproxy-root --type='json' -p='[{"op": "add", "path": "/spec/includes/-", "value": {"name": "grafana"}}]'
+    kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-http-proxy.yaml
+  else
+    kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-ingress.yaml
+  fi
   exit 0
 fi
 
