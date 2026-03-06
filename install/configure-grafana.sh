@@ -147,6 +147,7 @@ echo "Generating manifests..."
 generate_manifests
 
 if [[ "${DRY_RUN}" == true ]]; then
+    echo "Manifests generated"
     exit 0
 fi
 
@@ -158,7 +159,7 @@ if [[ "${INSTALL_GRAFANA}" == true ]]; then
   kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
   #No need to patch grafana as it will already be installed with the plugin and config
   if [[ "${CONTOUR_PROXY}" == true ]]; then
-    kubectl patch HTTPProxy -n "${GRAFANA_NAMESPACE}" sas-httpproxy-root --type='json' -p='[{"op": "add", "path": "/spec/includes/-", "value": {"name": "grafana"}}]'
+    kubectl patch HTTPProxy -n "${ESP_NAMESPACE}" sas-httpproxy-root --type='json' -p='[{"op": "add", "path": "/spec/includes/-", "value": {"name": "grafana", "namespace": "'${GRAFANA_NAMESPACE}'", conditions: [{"prefix": "/grafana"}]}}]'
     kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-http-proxy.yaml
   else
     kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-ingress.yaml
