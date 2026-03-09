@@ -3,17 +3,21 @@
 set -e -o pipefail -o nounset
 
 #input variables
-ESP_NAMESPACE="${1}"; export ESP_NAMESPACE
+ESP_NAMESPACE="${1}"
+export ESP_NAMESPACE
 GRAFANA_NAMESPACE="${2:-${ESP_NAMESPACE}}"
 ESP_PLUGIN_VERSION="${3}"
 
 #optional environment variables - exported for use in other scripts
-OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-sv_client}"; export OAUTH_CLIENT_ID
-OAUTH_CLIENT_SECRET="${OAUTH_CLIENT_SECRET:-secret}"; export OAUTH_CLIENT_SECRET
-KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"; export KEYCLOAK_SUBPATH
+OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-sv_client}"
+export OAUTH_CLIENT_ID
+OAUTH_CLIENT_SECRET="${OAUTH_CLIENT_SECRET:-secret}"
+export OAUTH_CLIENT_SECRET
+KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
+export KEYCLOAK_SUBPATH
 
 #optional environment variables
-OAUTH_TYPE="${OAUTH_TYPE:-viya}";
+OAUTH_TYPE="${OAUTH_TYPE:-viya}"
 DRY_RUN="${DRY_RUN:-false}"
 INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 CONTOUR_PROXY="${CONTOUR_PROXY:-false}"
@@ -21,42 +25,42 @@ GRAFANA_VERSION="${GRAFANA_VERSION:-12.1.0}"
 
 function check_requirements() {
   [ -z "${KUBECONFIG-}" ] && {
-      echo "KUBECONFIG environment variable unset." >&2
-      exit 1
+    echo "KUBECONFIG environment variable unset." >&2
+    exit 1
   }
 
   [ -z "${ESP_NAMESPACE-}" ] && {
-      echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
-      exit 1
+    echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
+    exit 1
   }
 
   [ -z "${ESP_PLUGIN_VERSION-}" ] && {
-      echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
-      exit 1
+    echo "Usage: ${0} <esp-namespace> <grafana-namespace> <version>" >&2
+    exit 1
   }
 
   if ! kubectl get namespace "${ESP_NAMESPACE}" 2>/dev/null 1>&2; then
-      echo >&2 "ERROR: Namespace ${ESP_NAMESPACE} not found."
-      exit 1
+    echo >&2 "ERROR: Namespace ${ESP_NAMESPACE} not found."
+    exit 1
   fi
 
   if ! kubectl get namespace "${GRAFANA_NAMESPACE}" 2>/dev/null 1>&2; then
-        echo >&2 "ERROR: Namespace ${GRAFANA_NAMESPACE} not found."
-        exit 1
+    echo >&2 "ERROR: Namespace ${GRAFANA_NAMESPACE} not found."
+    exit 1
   fi
 }
 
 function generate_manifests() {
   if [ -d "./manifests" ]; then
-      echo "Existing manifest directory found." >&2
-      echo "Removing manifests..."
-      rm -r ./manifests/
+    echo "Existing manifest directory found." >&2
+    echo "Removing manifests..."
+    rm -r ./manifests/
   fi
 
   [ -d "./manifests" ] || mkdir "manifests"
   cp -r *.yaml manifests/
 
-  for file in `find ./manifests/ -name "*.y*ml"` ; do
+  for file in $(find ./manifests/ -name "*.y*ml"); do
 
     sed -i 's|TEMPLATE_AUTH_URL|'$TEMPLATE_AUTH_URL'|g' $file
     sed -i 's|TEMPLATE_TOKEN_URL|'$TEMPLATE_TOKEN_URL'|g' $file
@@ -68,7 +72,6 @@ function generate_manifests() {
     sed -i 's|TEMPLATE_OAUTH_CLIENT_ID|'$OAUTH_CLIENT_ID'|g' $file
     sed -i 's|TEMPLATE_OAUTH_CLIENT_SECRET|'$OAUTH_CLIENT_SECRET'|g' $file
 
-
     if [[ "$GRAFANA_VERSION" =~ ^"11" ]]; then
       sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_11'|g' $file
       sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_11'|g' $file
@@ -76,7 +79,6 @@ function generate_manifests() {
       sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_12'|g' $file
       sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
     fi
-
 
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
 
@@ -147,8 +149,8 @@ echo "Generating manifests..."
 generate_manifests
 
 if [[ "${DRY_RUN}" == true ]]; then
-    echo "Manifests generated"
-    exit 0
+  echo "Manifests generated"
+  exit 0
 fi
 
 echo "Create config-map.yaml"
@@ -159,7 +161,9 @@ if [[ "${INSTALL_GRAFANA}" == true ]]; then
   kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
   #No need to patch grafana as it will already be installed with the plugin and config
   if [[ "${CONTOUR_PROXY}" == true ]]; then
-    kubectl patch HTTPProxy -n "${ESP_NAMESPACE}" sas-httpproxy-root --type='json' -p='[{"op": "add", "path": "/spec/includes/-", "value": {"name": "grafana", "namespace": "'${GRAFANA_NAMESPACE}'", conditions: [{"prefix": "/grafana"}]}}]'
+    if ! kubectl get HTTPProxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o json | jq -e '.spec.includes[]? | select(.name=="grafana")' >/dev/null; then
+      kubectl patch HTTPProxy -n "${ESP_NAMESPACE}" sas-httpproxy-root --type='json' -p='[{"op": "add", "path": "/spec/includes/-", "value": {"name": "grafana", "namespace": "'${GRAFANA_NAMESPACE}'"}}]'
+    fi
     kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-http-proxy.yaml
   else
     kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-ingress.yaml

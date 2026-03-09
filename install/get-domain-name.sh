@@ -19,16 +19,12 @@ if [ -z ${ESP_DOMAIN+null} ]; then
 
   if [ -z "${ESP_DOMAIN}" ]; then
     ESP_DOMAIN=$(kubectl get httpproxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o jsonpath="{.spec.virtualhost.fqdn}") || {
-      echo "Failed to get ESP domain from http proxy"
+      echo "Unable to determine the esp domain name from an ingress or proxy, please set ESP_DOMAIN to your environments domain name."
+      exit 1
     }
   fi
 
-  if [ "${ESP_DOMAIN}" == null ]; then
-    echo "Unable to determine the esp domain name from an ingress, please set ESP_DOMAIN to your environments domain name." >&2
-    exit 1
-  fi
-
-  echo "Domain is " $ESP_DOMAIN
+  echo "ESP domain is " $ESP_DOMAIN
 fi
 
 if [ "$ESP_NAMESPACE" == "$GRAFANA_NAMESPACE" ]; then
@@ -39,16 +35,18 @@ fi
 [ -z ${GRAFANA_DOMAIN+null} ] && {
 
   # We cant easily determine the grafana domain unless there is an ingress
-  GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress/sas-event-stream-manager-app --output json | jq -r '.items[0].spec.rules[0].host') || {
-    echo "Failed to get ESP domain from ingress trying http proxy" >&2
-    GRAFANA_DOMAIN=$(kubectl get httpproxy -n "${GRAFANA_NAMESPACE}" sas-httpproxy-root -o jsonpath="{.spec.virtualhost.fqdn}")
-    echo "Domain is " $GRAFANA_DOMAIN
+  GRAFANA_DOMAIN=$(kubectl -n "${GRAFANA_NAMESPACE}" get ingress --output json | jq -r '.items[0].spec.rules[0].host') || {
+    echo "Failed to get ESP domain from ingress trying sas-httpproxy-root in the ESP_NAMESPACE"
   }
 
-  if [ "${GRAFANA_DOMAIN}" == null ]; then
-    echo "Unable to determine the grafana domain name from an ingress, please set GRAFANA_DOMAIN to your environments domain name." >&2
-    exit 1
+  if [ -z "${GRAFANA_DOMAIN}" ] || [ "${GRAFANA_DOMAIN}" == "null" ]; then
+    GRAFANA_DOMAIN=$(kubectl get httpproxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o jsonpath="{.spec.virtualhost.fqdn}") || {
+      echo "Unable to determine the grafana domain name from an ingress or proxy, please set GRAFANA_DOMAIN to your environments domain name."
+      exit 1
+    }
   fi
+
+  echo "Grafana domain is " $GRAFANA_DOMAIN
 }
 
 export ESP_DOMAIN
