@@ -70,14 +70,16 @@ function generate_manifests() {
     sed -i 's|TEMPLATE_GRAFANA_DOMAIN|'$GRAFANA_DOMAIN'|g' $file
     sed -i 's|TEMPLATE_ESP_DOMAIN|'$ESP_DOMAIN'|g' $file
     sed -i 's|TEMPLATE_OAUTH_CLIENT_ID|'$OAUTH_CLIENT_ID'|g' $file
-    sed -i 's|TEMPLATE_OAUTH_CLIENT_SECRET|'$OAUTH_CLIENT_SECRET'|g' $file
+
+    escaped_secret=$(echo "$OAUTH_CLIENT_SECRET" | sed -e 's/[\/&|\\]/\\&/g')
+    sed -i "s|TEMPLATE_OAUTH_CLIENT_SECRET|$escaped_secret|g" $file
 
     if [[ "$GRAFANA_VERSION" =~ ^"11" ]]; then
       sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_11'|g' $file
       sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_11'|g' $file
     else
       sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_12'|g' $file
-      sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
+      sed -i 's|TEMPLATE_ESP_PLUGIN _SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
     fi
 
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
