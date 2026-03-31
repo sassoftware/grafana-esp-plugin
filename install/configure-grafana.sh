@@ -79,7 +79,7 @@ function generate_manifests() {
       sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_11'|g' $file
     else
       sed -i 's|TEMPLATE_ESP_PLUGIN_VAR|'$TEMPLATE_ESP_PLUGIN_VAR_12'|g' $file
-      sed -i 's|TEMPLATE_ESP_PLUGIN _SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
+      sed -i 's|TEMPLATE_ESP_PLUGIN_SOURCE|'$PLUGIN_STRING_GRAFANA_12'|g' $file
     fi
 
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
