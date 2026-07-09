@@ -36,7 +36,7 @@ data:
     use_pkce = true
     auto_login = true
     client_id = TEMPLATE_OAUTH_CLIENT_ID
-    client_secret = TEMPLATE_OAUTH_CLIENT_SECRET
+    client_secret = `TEMPLATE_OAUTH_CLIENT_SECRET`
     scopes = openid email profile
     email_attribute_path = email
     name_attribute_path = user_name
