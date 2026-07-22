@@ -71,9 +71,9 @@ OAuth details:
   ESP Domain:         ${ESP_DOMAIN}
   Grafana Domain:      ${GRAFANA_DOMAIN}
   OAuth client ID:     ${OAUTH_CLIENT_ID}
-  OAuth client secret: ${OAUTH_CLIENT_SECRET}
+  OAuth client secret: ****
   UAA Admin:     ${UAA_ADMIN}
-  UAA secret: ${UAA_SECRET}
+  UAA secret: ****
 EOF
 
 add_grafana_auth_redirect_uaa

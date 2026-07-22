@@ -141,7 +141,7 @@ cat <<EOF
 OAuth details:
   ESP Domain:         ${ESP_DOMAIN}
   OAuth client ID:     ${OAUTH_CLIENT_ID}
-  OAuth client secret: ${OAUTH_CLIENT_SECRET}
+  OAuth client secret: ****
 EOF
 
 prepare_keycloak_roles
