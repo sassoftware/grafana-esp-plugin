@@ -126,7 +126,7 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
    - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
    - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
    ```
-     . register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
+     source ./register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
    ```
 
 6. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
