@@ -2,7 +2,7 @@
 
 set -e -o pipefail -o nounset
 
-`KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
+KEYCLOAK_SUBPATH="${KEYCLOAK_SUBPATH:-auth}"
 
 ESP_NAMESPACE="${1}"
 
