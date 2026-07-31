@@ -32,6 +32,7 @@ To visualize data, you must have an ESP project running in either SAS Event Stre
    - **Direct ESP Server URL**: Use this option to connect directly to a specific ESP server instance by providing its URL and connection details. This option bypasses the
      discovery service and is useful if you know the exact ESP server endpoint you want to use.
 4. If you selected **Internal Discovery Service** in the previous step, another drop-down menu is displayed. Select either **SAS Event Stream Manager** or **SAS Event Stream Processing Studio** as the discovery service, depending on where you prefer to run ESP projects.
+> **Note**: In the SAS Viya platform, by default only members of the SASAdministrators group can access SAS Event Stream Manager.
 5. By default, the **TLS** check box is selected. If the data source does not use TLS, clear this check box.
 6. Select the **OAuth token** check box if OAuth tokens are used by the discovery service and you want to forward the token to the discovery service and ESP servers.
 7. Click **Save & test**.</br>The plug-in attempts to connect to your chosen discovery service.
