@@ -37,7 +37,7 @@ data:
     auto_login = true
     client_id = TEMPLATE_OAUTH_CLIENT_ID
     client_secret = `TEMPLATE_OAUTH_CLIENT_SECRET`
-    scopes = * openid email profile
+    scopes = TEMPLATE_OAUTH_SCOPES
     email_attribute_path = email
     name_attribute_path = user_name
     login_attribute_path = user_name

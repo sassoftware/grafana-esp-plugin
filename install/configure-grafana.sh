@@ -120,6 +120,7 @@ if [ "${OAUTH_TYPE}" == "viya" ]; then
   TEMPLATE_TOKEN_URL="https://${ESP_DOMAIN}/SASLogon/oauth/token"
   TEMPLATE_API_URL="https://${ESP_DOMAIN}/SASLogon/userinfo"
   TEMPLATE_SIGNOUT_REDIRECT_URL="https://${ESP_DOMAIN}/SASLogon/logout.do"
+  TEMPLATE_OAUTH_SCOPES="* openid profile email"
 
 elif [ "${OAUTH_TYPE}" == "keycloak" ]; then
 
@@ -127,6 +128,7 @@ elif [ "${OAUTH_TYPE}" == "keycloak" ]; then
   TEMPLATE_TOKEN_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/token"
   TEMPLATE_API_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/userinfo"
   TEMPLATE_SIGNOUT_REDIRECT_URL="https://${ESP_DOMAIN}/${KEYCLOAK_SUBPATH}/realms/sas-esp/protocol/openid-connect/logout?client_id=${OAUTH_CLIENT_ID}\&post_logout_redirect_uri=https://${ESP_DOMAIN}/grafana/login"
+  TEMPLATE_OAUTH_SCOPES="openid profile email"
 
 else
 
