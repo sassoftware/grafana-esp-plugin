@@ -19,8 +19,6 @@ The following steps provide an example of how to get started with the plug-in.
 * The plug-in is automatically deployed with the SAS Event Stream Processing app in the Microsoft Marketplace. When SAS Event Stream Processing is deployed with the SAS Viya platform, you can deploy the plug-in by completing the instructions in [Deploying the Plug-in](#deploying-the-plug-in).
 * An ESP project that can be run in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or ESP server.
 
-When SAS Event Stream Processing is deployed with other SAS products, by default only members of the SASAdministrators group can access SAS Event Stream Manager and the Event Stream Manager API.
-
 To visualize data, you must have an ESP project running in either SAS Event Stream Processing Studio, SAS Event Stream Manager, or ESP server.
 
 ### Add the SAS Event Stream Processing Data Source
