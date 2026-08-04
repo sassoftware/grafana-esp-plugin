@@ -84,6 +84,8 @@ function generate_manifests() {
 
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
 
+    sed -i 's|TEMPLATE_OAUTH_SCOPES|'$TEMPLATE_OAUTH_SCOPES'|g' $file
+
     if [[ "${DRY_RUN}" == true ]]; then
 
       if [[ "${INSTALL_GRAFANA}" == false && "${file}" == "./manifests/grafana.yaml" ]]; then
