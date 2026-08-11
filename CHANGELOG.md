@@ -66,3 +66,5 @@ Update install scripts to work with grafana 12.x
 ## 7.74.0
 
 ## 7.75.0
+
+## 7.76.0
