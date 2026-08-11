@@ -22,6 +22,7 @@ DRY_RUN="${DRY_RUN:-false}"
 INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 CONTOUR_PROXY="${CONTOUR_PROXY:-false}"
 GRAFANA_VERSION="${GRAFANA_VERSION:-12.1.0}"
+ENABLE_DATASOURCES="${ENABLE_DATASOURCES:-false}"
 
 function check_requirements() {
   [ -z "${KUBECONFIG-}" ] && {
@@ -84,7 +85,8 @@ function generate_manifests() {
 
     sed -i 's|TEMPLATE_GRAFANA_VERSION|'$GRAFANA_VERSION'|g' $file
 
-    sed -i 's|TEMPLATE_OAUTH_SCOPES|'$TEMPLATE_OAUTH_SCOPES'|g' $file
+    escaped_scopes=$(echo "$TEMPLATE_OAUTH_SCOPES" | sed -e 's/[\/&|\\]/\\&/g')
+    sed -i "s|TEMPLATE_OAUTH_SCOPES|$escaped_scopes|g" "$file"
 
     if [[ "${DRY_RUN}" == true ]]; then
 

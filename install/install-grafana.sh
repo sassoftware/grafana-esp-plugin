@@ -16,7 +16,8 @@ KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 # -i <install-grafana>
 # -u <uninstall-grafana>
 # -f <kubeconfig-file>
-while getopts ":n:g:o:c:k:i:u:f:" opt; do
+# -d <dry-run>
+while getopts ":n:g:o:c:k:i:u:f:d:" opt; do
     case "$opt" in
         n) ESP_NAMESPACE="$OPTARG" ;;
         g) GRAFANA_NAMESPACE="$OPTARG" ;;
@@ -28,6 +29,7 @@ while getopts ":n:g:o:c:k:i:u:f:" opt; do
         f) KUBECONFIG="$OPTARG" ;;
         \?) echo "Unknown option: -$OPTARG" >&2; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
+        d) DRY_RUN="$OPTARG" ;;
     esac
 done
 shift $((OPTIND - 1))
@@ -40,6 +42,7 @@ CONTOUR_PROXY=${CONTOUR_PROXY:-${4:-false}}
 KEYCLOAK_SUBPATH=${KEYCLOAK_SUBPATH:-${5:-keycloak}}
 INSTALL_GRAFANA=${INSTALL_GRAFANA:-${6:-true}}
 UNINSTALL_GRAFANA=${UNINSTALL_GRAFANA:-${7:-false}}
+DRY_RUN=${DRY_RUN:-${8:-false}}
 
 if [ -z "$ESP_NAMESPACE" ]; then
     echo "Usage: $0 -n <esp-namespace> [-g <grafana-namespace>] [-o <oauth-type:viya|keycloak>] [-c <contour-proxy:boolean>] [-k <keycloak-subpath>] [-i <install-grafana:boolean>] [-u <uninstall-grafana:boolean>]" >&2
@@ -53,6 +56,7 @@ export CONTOUR_PROXY
 export KEYCLOAK_SUBPATH
 export INSTALL_GRAFANA
 export UNINSTALL_GRAFANA
+export DRY_RUN
 
 # get latest grafana plugin version
 LATEST_RELEASE=`curl -X GET -s -k https://api.github.com/repos/sassoftware/grafana-esp-plugin/releases | jq -r 'first | .tag_name'`
