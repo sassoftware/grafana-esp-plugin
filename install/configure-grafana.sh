@@ -23,6 +23,7 @@ INSTALL_GRAFANA="${INSTALL_GRAFANA:-false}"
 CONTOUR_PROXY="${CONTOUR_PROXY:-false}"
 GRAFANA_VERSION="${GRAFANA_VERSION:-12.1.0}"
 ENABLE_DATASOURCES="${ENABLE_DATASOURCES:-false}"
+ENABLE_NODE_SELECTOR="${ENABLE_NODE_SELECTOR:-false}"
 
 function check_requirements() {
   [ -z "${KUBECONFIG-}" ] && {
@@ -102,6 +103,28 @@ function generate_manifests() {
   done
 }
 
+function patch_datasources() {
+
+  if [[ "${ENABLE_DATASOURCES}" == true ]]; then
+    echo "Adding datasources..."
+    tmp_file="./manifests/grafana.yaml.tmp"
+    kubectl patch -f ./manifests/grafana.yaml --local --patch-file ./manifests/patch-grafana-data-sources.yaml -o yaml > "$tmp_file"
+    mv "$tmp_file" ./manifests/grafana.yaml
+  fi
+
+}
+
+function patch_nodeselector() {
+
+  if [[ "${ENABLE_NODE_SELECTOR}" == true ]]; then
+    echo "Adding node selector..."
+    tmp_file="./manifests/grafana.yaml.tmp"
+    kubectl patch -f ./manifests/grafana.yaml --local --patch-file ./manifests/patch-grafana-node-selector.yaml -o yaml > "$tmp_file"
+    mv "$tmp_file" ./manifests/grafana.yaml
+  fi
+
+}
+
 check_requirements
 
 echo "Fetching required deployment information..."
@@ -155,6 +178,8 @@ EOF
 
 echo "Generating manifests..."
 generate_manifests
+patch_datasources
+patch_nodeselector
 
 if [[ "${DRY_RUN}" == true ]]; then
   echo "Manifests generated"
@@ -164,9 +189,16 @@ fi
 echo "Create config-map.yaml"
 kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/config-map.yaml
 
+if [[ "${ENABLE_DATASOURCES}" == true ]]; then
+  echo "Create datasources.yaml"
+  kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-datasources.yaml
+fi
+
 if [[ "${INSTALL_GRAFANA}" == true ]]; then
   echo "Installing grafana"
   kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana.yaml
+  kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-pvc.yaml
+  kubectl -n "${GRAFANA_NAMESPACE}" apply -f ./manifests/grafana-service.yaml
   #No need to patch grafana as it will already be installed with the plugin and config
   if [[ "${CONTOUR_PROXY}" == true ]]; then
     if ! kubectl get HTTPProxy -n "${ESP_NAMESPACE}" sas-httpproxy-root -o json | jq -e '.spec.includes[]? | select(.name=="grafana")' >/dev/null; then

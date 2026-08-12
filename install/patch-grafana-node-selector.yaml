@@ -1,0 +1,11 @@
+spec:
+  template:
+    spec:
+      nodeSelector:
+        workload.sas.com/class: stateless
+      tolerations:
+      - key: workload.sas.com/class
+        operator: Equal
+        value: stateless
+        effect: NoSchedule
+
