@@ -6,6 +6,8 @@ KEYCLOAK_SUBPATH="keycloak"
 INSTALL_GRAFANA="true"
 UNINSTALL_GRAFANA="false"
 KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
+ENABLE_NODE_SELECTOR="false"
+ENABLE_DATASOURCES="false"
 
 # Short options:
 # -n <esp-namespace>
@@ -17,7 +19,9 @@ KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 # -u <uninstall-grafana>
 # -f <kubeconfig-file>
 # -d <dry-run>
-while getopts ":n:g:o:c:k:i:u:f:d:" opt; do
+# -s <enable-node-selector:boolean>
+# -e <enable-datasources:boolean>
+while getopts ":n:g:o:c:k:i:u:f:d:s:e:" opt; do
     case "$opt" in
         n) ESP_NAMESPACE="$OPTARG" ;;
         g) GRAFANA_NAMESPACE="$OPTARG" ;;
@@ -27,9 +31,11 @@ while getopts ":n:g:o:c:k:i:u:f:d:" opt; do
         i) INSTALL_GRAFANA="$OPTARG" ;;
         u) UNINSTALL_GRAFANA="$OPTARG" ;;
         f) KUBECONFIG="$OPTARG" ;;
+        d) DRY_RUN="$OPTARG" ;;
+        s) ENABLE_NODE_SELECTOR="$OPTARG" ;;
+        e) ENABLE_DATASOURCES="$OPTARG" ;;
         \?) echo "Unknown option: -$OPTARG" >&2; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
-        d) DRY_RUN="$OPTARG" ;;
     esac
 done
 shift $((OPTIND - 1))
@@ -57,6 +63,9 @@ export KEYCLOAK_SUBPATH
 export INSTALL_GRAFANA
 export UNINSTALL_GRAFANA
 export DRY_RUN
+export ENABLE_NODE_SELECTOR
+export ENABLE_DATASOURCES
+export KUBECONFIG
 
 # get latest grafana plugin version
 LATEST_RELEASE=`curl -X GET -s -k https://api.github.com/repos/sassoftware/grafana-esp-plugin/releases | jq -r 'first | .tag_name'`
@@ -78,10 +87,14 @@ if [ "$UNINSTALL_GRAFANA" == "true" ]; then
     bash remove-grafana.sh "$GRAFANA_NAMESPACE"
 else
     
-    if [ "$OAUTH_TYPE" == "viya" ]; then
-        source ./register-oauth-client-viya.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
-    else
-        source ./register-oauth-client-keycloak.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
+    if [ "$DRY_RUN" == "false" ]; then
+        
+        if [ "$OAUTH_TYPE" == "viya" ]; then
+            source ./register-oauth-client-viya.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
+        else
+            source ./register-oauth-client-keycloak.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
+        fi
+
     fi
     
     bash configure-grafana.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE" "$GRAFANA_PLUGIN_VERSION"
