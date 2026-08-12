@@ -3,55 +3,99 @@ GRAFANA_NAMESPACE=""
 OAUTH_TYPE="viya"
 CONTOUR_PROXY="false"
 KEYCLOAK_SUBPATH="keycloak"
-INSTALL_GRAFANA="true"
 UNINSTALL_GRAFANA="false"
+DRY_RUN="false"
 KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 ENABLE_NODE_SELECTOR="false"
 ENABLE_DATASOURCES="false"
+INSTALL_GRAFANA="true"
 
-# Short options:
-# -n <esp-namespace>
-# -g <grafana-namespace>
-# -o <oauth-type>
-# -c <contour-proxy>
-# -k <keycloak-subpath>
-# -i <install-grafana>
-# -u <uninstall-grafana>
-# -f <kubeconfig-file>
-# -d <dry-run>
-# -s <enable-node-selector:boolean>
-# -e <enable-datasources:boolean>
-while getopts ":n:g:o:c:k:i:u:f:d:s:e:" opt; do
-    case "$opt" in
-        n) ESP_NAMESPACE="$OPTARG" ;;
-        g) GRAFANA_NAMESPACE="$OPTARG" ;;
-        o) OAUTH_TYPE="$OPTARG" ;;
-        c) CONTOUR_PROXY="$OPTARG" ;;
-        k) KEYCLOAK_SUBPATH="$OPTARG" ;;
-        i) INSTALL_GRAFANA="$OPTARG" ;;
-        u) UNINSTALL_GRAFANA="$OPTARG" ;;
-        f) KUBECONFIG="$OPTARG" ;;
-        d) DRY_RUN="$OPTARG" ;;
-        s) ENABLE_NODE_SELECTOR="$OPTARG" ;;
-        e) ENABLE_DATASOURCES="$OPTARG" ;;
-        \?) echo "Unknown option: -$OPTARG" >&2; exit 1 ;;
-        :) echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
+print_usage() {
+    echo "Usage: $0 -n <esp-namespace> [options]" >&2
+    echo "Default behavior: installs Grafana. Use -u/--uninstall-grafana to uninstall." >&2
+    echo "Options:" >&2
+    echo "  -g, --grafana-namespace <name>" >&2
+    echo "  -o, --oauth-type <viya|keycloak>" >&2
+    echo "  -c, --contour-proxy" >&2
+    echo "  -k, --keycloak-subpath <path>" >&2
+    echo "  -u, --uninstall-grafana" >&2
+    echo "  -f, --kubeconfig <path>" >&2
+    echo "  -d, --dry-run" >&2
+    echo "  -s, --enable-node-selector" >&2
+    echo "  -e, --enable-datasources" >&2
+}
+
+require_arg() {
+    local flag="$1"
+    local value="${2-}"
+    if [[ -z "$value" || "$value" == -* ]]; then
+        echo "Option $flag requires an argument." >&2
+        print_usage
+        exit 1
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -n|--esp-namespace)
+            require_arg "$1" "${2-}"
+            ESP_NAMESPACE="$2"
+            shift 2
+            ;;
+        -g|--grafana-namespace)
+            require_arg "$1" "${2-}"
+            GRAFANA_NAMESPACE="$2"
+            shift 2
+            ;;
+        -o|--oauth-type)
+            require_arg "$1" "${2-}"
+            OAUTH_TYPE="$2"
+            shift 2
+            ;;
+        -k|--keycloak-subpath)
+            require_arg "$1" "${2-}"
+            KEYCLOAK_SUBPATH="$2"
+            shift 2
+            ;;
+        -f|--kubeconfig)
+            require_arg "$1" "${2-}"
+            KUBECONFIG="$2"
+            shift 2
+            ;;
+        -c|--contour-proxy)
+            CONTOUR_PROXY="true"
+            shift
+            ;;
+        -u|--uninstall-grafana)
+            UNINSTALL_GRAFANA="true"
+            shift
+            ;;
+        -d|--dry-run)
+            DRY_RUN="true"
+            shift
+            ;;
+        -s|--enable-node-selector)
+            ENABLE_NODE_SELECTOR="true"
+            shift
+            ;;
+        -e|--enable-datasources)
+            ENABLE_DATASOURCES="true"
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            print_usage
+            exit 1
+            ;;
     esac
 done
-shift $((OPTIND - 1))
-
-# Backward-compatible positional arguments
-ESP_NAMESPACE=${ESP_NAMESPACE:-${1}}
-GRAFANA_NAMESPACE=${GRAFANA_NAMESPACE:-${2:-${ESP_NAMESPACE}}}
-OAUTH_TYPE=${OAUTH_TYPE:-${3:-viya}}
-CONTOUR_PROXY=${CONTOUR_PROXY:-${4:-false}}
-KEYCLOAK_SUBPATH=${KEYCLOAK_SUBPATH:-${5:-keycloak}}
-INSTALL_GRAFANA=${INSTALL_GRAFANA:-${6:-true}}
-UNINSTALL_GRAFANA=${UNINSTALL_GRAFANA:-${7:-false}}
-DRY_RUN=${DRY_RUN:-${8:-false}}
 
 if [ -z "$ESP_NAMESPACE" ]; then
-    echo "Usage: $0 -n <esp-namespace> [-g <grafana-namespace>] [-o <oauth-type:viya|keycloak>] [-c <contour-proxy:boolean>] [-k <keycloak-subpath>] [-i <install-grafana:boolean>] [-u <uninstall-grafana:boolean>]" >&2
+    print_usage
     exit 1
 fi
 
@@ -60,12 +104,12 @@ export GRAFANA_NAMESPACE
 export OAUTH_TYPE
 export CONTOUR_PROXY
 export KEYCLOAK_SUBPATH
-export INSTALL_GRAFANA
 export UNINSTALL_GRAFANA
 export DRY_RUN
 export ENABLE_NODE_SELECTOR
 export ENABLE_DATASOURCES
 export KUBECONFIG
+export INSTALL_GRAFANA
 
 # get latest grafana plugin version
 LATEST_RELEASE=`curl -X GET -s -k https://api.github.com/repos/sassoftware/grafana-esp-plugin/releases | jq -r 'first | .tag_name'`

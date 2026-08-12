@@ -8,8 +8,6 @@ data:
         "apiVersion": 1,
         "datasources": [
           {
-              "id": 1,
-              "uid": "afu6f0e4rx4hse",
               "orgId": 1,
               "name": "sasesp-plugin",
               "type": "sasesp-plugin",
@@ -29,11 +27,9 @@ data:
               "readOnly": false
           },
           {
-              "id": 1,
-              "uid": "afu6f0e4rx4hse",
               "orgId": 1,
-              "name": "sasesp-plugin",
-              "type": "sasesp-plugin-manager",
+              "name": "sasesp-plugin-manager",
+              "type": "sasesp-plugin",
               "typeName": "SAS Event Stream Manager",
               "typeLogoUrl": "public/plugins/sasesp-plugin/img/logo.svg",
               "access": "proxy",
@@ -41,7 +37,7 @@ data:
               "user": "",
               "database": "",
               "basicAuth": false,
-              "isDefault": true,
+              "isDefault": false,
               "jsonData": {
                   "oauthPassThru": true,
                   "pdcInjected": false,
