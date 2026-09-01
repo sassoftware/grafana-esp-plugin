@@ -1,10 +1,10 @@
-FROM grafana/grafana:12.2.0-ubuntu
+FROM grafana/grafana:13.2.0
 
 USER root
 WORKDIR /root
 
-RUN apt-get -y update
-RUN apt-get -y install git build-essential
+RUN apk update
+RUN apk add git build-base
 
 RUN curl -L https://go.dev/dl/go1.21.3.linux-amd64.tar.gz > go1.21.3.linux-amd64.tar.gz
 
