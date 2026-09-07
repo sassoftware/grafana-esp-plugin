@@ -203,11 +203,11 @@ To build and deploy a privately signed version of the plug-in, do the following 
    ```
    kubectl -n <namespace> scale deployment grafana --replicas=0
    ```
-10. Remove the `GF_INSTALL_PLUGINS` environment variable from the Grafana deployment.
+10. Remove the `GF_PLUGINS_PREINSTALL_SYNC` environment variable from the Grafana deployment.
     ```
-    kubectl -n <namespace> set env deployment/grafana GF_INSTALL_PLUGINS-
+    kubectl -n <namespace> set env deployment/grafana GF_PLUGINS_PREINSTALL_SYNC-
     ```
 11. Restart the Grafana pod for the changes to take effect.
     ```
-    kubectl -n <namespace> scale deployment grafana --replicas=0
+    kubectl -n <namespace> scale deployment grafana --replicas=1
     ```
