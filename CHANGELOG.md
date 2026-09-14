@@ -49,24 +49,5 @@ Update grafana runtime to 12.1.0
 Update grafana compatability to 12.2.0
 Update install scripts to work with grafana 12.x
 
-## 7.67.0
-
-## 7.68.0
-
-## 7.69.0
-
-## 7.70.0
-
-## 7.71.0
-
-## 7.72.0
-
-## 7.73.0
-
-## 7.74.0
-
-## 7.75.0
-
-## 7.76.0
-
-## 7.77.0
+## 7.79.0
+Upgrade Grafana to 13.2
