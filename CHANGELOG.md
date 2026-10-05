@@ -51,3 +51,5 @@ Update install scripts to work with grafana 12.x
 
 ## 7.79.0
 Upgrade Grafana to 13.2
+
+## 7.78.0
