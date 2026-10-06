@@ -13,6 +13,7 @@ INSTALL_GRAFANA="true"
 print_usage() {
     echo "Usage: $0 -n <esp-namespace> [options]" >&2
     echo "Default behavior: installs Grafana. Use -u/--uninstall-grafana to uninstall." >&2
+    echo "When --oauth-type viya is used, VIYA_USERNAME and VIYA_PASSWORD must be set." >&2
     echo "Options:" >&2
     echo "  -g, --grafana-namespace <name>" >&2
     echo "  -o, --oauth-type <viya|keycloak>" >&2
@@ -97,6 +98,18 @@ done
 if [ -z "$ESP_NAMESPACE" ]; then
     print_usage
     exit 1
+fi
+
+if [ "$OAUTH_TYPE" == "viya" ]; then
+    if [ -z "${VIYA_USERNAME-}" ]; then
+        echo "VIYA_USERNAME environment variable must be set when OAUTH_TYPE is viya." >&2
+        exit 1
+    fi
+
+    if [ -z "${VIYA_PASSWORD-}" ]; then
+        echo "VIYA_PASSWORD environment variable must be set when OAUTH_TYPE is viya." >&2
+        exit 1
+    fi
 fi
 
 export ESP_NAMESPACE
