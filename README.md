@@ -125,7 +125,13 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
     export CONTOUR_PROXY=true
     ```
 
-5. Run `register-oauth-client-viya.sh` or `register-oauth-client-keycloak.sh` adjusting the command to specify the following variables.
+5. (Optional) If installing to a Viya environment, set environment variables to provide credentials of a user with sufficient privileges to register Grafana as an OAuth client with SASLogon.
+    ```
+    export VIYA_USERNAME=<username>
+    export VIYA_PASSWORD=<password>
+    ```
+
+6. Run `register-oauth-client-viya.sh` or `register-oauth-client-keycloak.sh` adjusting the command to specify the following variables.
    - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
    - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
    ```
@@ -133,7 +139,7 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
      source ./register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
    ```
 
-6. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
+7. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
    - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
    - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
    - The _version_ of the plug-in that you want to deploy. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
@@ -147,7 +153,7 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
      bash configure-grafana.sh <esp-namespace> <grafana-namespace> <version>
    ```
 
-7. If Grafana is not running in the same namespace as the SAS Viya platform, you must update the Content Security Policy (CSP) for SAS Logon to allow the Grafana host name to be used as a target of form submission. 
+8. If Grafana is not running in the same namespace as the SAS Viya platform, you must update the Content Security Policy (CSP) for SAS Logon to allow the Grafana host name to be used as a target of form submission. 
    If you do not update the CSP, the browser blocks the redirect. You can update the CSP in one of the following two ways:
    - Use SAS Environment Manager to update the _content-security-policy_ value under the _sas.commons.web.security_ section.
    - Update the _sas-logon-app_ deployment to add the _SAS_COMMONS_WEB_SECURITY_CONTENTSECURITYPOLICY_ environment variable.
