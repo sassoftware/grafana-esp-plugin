@@ -22,18 +22,26 @@ function usage () {
     exit 1
 }
 
+[ -z "${VIYA_USERNAME-}" ] && {
+    echo "VIYA_USERNAME environment variable unset." >&2
+    exit 1
+}
+
+[ -z "${VIYA_PASSWORD-}" ] && {
+    echo "VIYA_PASSWORD environment variable unset." >&2
+    exit 1
+}
+
 #Work out the domain names
 . get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
-function fetch_consul_token () {
-    _token=$(kubectl -n "${ESP_NAMESPACE}" get secret sas-consul-client -o go-template='{{ .data.CONSUL_TOKEN | base64decode}}')
-
-    echo ${_token}
-}
-
 function fetch_saslogon_token () {
-    _token=$(fetch_consul_token)
-    _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients/consul?callback=false&serviceId=app" -H "X-Consul-Token: ${_token}")
+    _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        --data-urlencode "client_id=sas.cli" \
+        --data-urlencode "grant_type=password" \
+        --data-urlencode "username=${VIYA_USERNAME}" \
+        --data-urlencode "password=${VIYA_PASSWORD}")
 
     echo "${_resp}" | jq -r '.access_token'
 }
