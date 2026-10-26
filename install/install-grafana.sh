@@ -13,7 +13,7 @@ INSTALL_GRAFANA="true"
 print_usage() {
     echo "Usage: $0 -n <esp-namespace> [options]" >&2
     echo "Default behavior: installs Grafana. Use -u/--uninstall-grafana to uninstall." >&2
-    echo "When --oauth-type viya is used, VIYA_USERNAME and VIYA_PASSWORD must be set." >&2
+    echo "When Grafana is installed to a namespace outside the ESP namespace, VIYA_USERNAME and VIYA_PASSWORD must be set." >&2
     echo "Options:" >&2
     echo "  -g, --grafana-namespace <name>" >&2
     echo "  -o, --oauth-type <viya|keycloak>" >&2
@@ -100,14 +100,14 @@ if [ -z "$ESP_NAMESPACE" ]; then
     exit 1
 fi
 
-if [ "$OAUTH_TYPE" == "viya" ]; then
+if [ "$GRAFANA_NAMESPACE" != "$ESP_NAMESPACE" ]; then
     if [ -z "${VIYA_USERNAME-}" ]; then
-        echo "VIYA_USERNAME environment variable must be set when OAUTH_TYPE is viya." >&2
+        echo "VIYA_USERNAME environment variable must be set when GRAFANA_NAMESPACE is different to ESP_NAMESPACE." >&2
         exit 1
     fi
 
     if [ -z "${VIYA_PASSWORD-}" ]; then
-        echo "VIYA_PASSWORD environment variable must be set when OAUTH_TYPE is viya." >&2
+        echo "VIYA_PASSWORD environment variable must be set when GRAFANA_NAMESPACE is different to ESP_NAMESPACE." >&2
         exit 1
     fi
 fi
@@ -132,18 +132,18 @@ if [ -z "$GRAFANA_PLUGIN_VERSION" ]; then
 fi
 
 if [ "$UNINSTALL_GRAFANA" == "true" ]; then
-    
     if [ "$OAUTH_TYPE" == "viya" ]; then
         bash remove-oauth-viya.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
     else
         bash remove-oauth-keycloak.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE"
     fi
-    
+
     export DRY_RUN=true
     bash configure-grafana.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE" "$GRAFANA_PLUGIN_VERSION"
     bash remove-grafana.sh "$GRAFANA_NAMESPACE"
 else
-    
+    bash configure-grafana.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE" "$GRAFANA_PLUGIN_VERSION"
+
     if [ "$DRY_RUN" == "false" ]; then
         
         if [ "$OAUTH_TYPE" == "viya" ]; then
@@ -153,6 +153,4 @@ else
         fi
 
     fi
-    
-    bash configure-grafana.sh "$ESP_NAMESPACE" "$GRAFANA_NAMESPACE" "$GRAFANA_PLUGIN_VERSION"
 fi

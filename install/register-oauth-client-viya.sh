@@ -22,20 +22,31 @@ function usage () {
     exit 1
 }
 
-[ -z "${VIYA_USERNAME-}" ] && {
-    echo "VIYA_USERNAME environment variable unset." >&2
-    exit 1
-}
-
-[ -z "${VIYA_PASSWORD-}" ] && {
-    echo "VIYA_PASSWORD environment variable unset." >&2
-    exit 1
-}
-
 #Work out the domain names
 . get-domain-name.sh $ESP_NAMESPACE $GRAFANA_NAMESPACE
 
+function fetch_ksa_token () {
+    _token=$(kubectl -n "${ESP_NAMESPACE}" exec -c grafana deployment/grafana -- sh -c 'cat /var/run/secrets/kubernetes.io/serviceaccount/token' 2>/dev/null)
+
+    [ -z "${_token}" ] && {
+        echo >&2 "Failed to fetch KSA token"
+        return 1
+    }
+
+    echo ${_token}
+}
+
 function fetch_saslogon_token () {
+    [ -z "${VIYA_USERNAME-}" ] && {
+        echo "VIYA_USERNAME environment variable unset." >&2
+        exit 1
+    }
+
+    [ -z "${VIYA_PASSWORD-}" ] && {
+        echo "VIYA_PASSWORD environment variable unset." >&2
+        exit 1
+    }
+
     _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         --data-urlencode "client_id=sas.cli" \
@@ -46,8 +57,17 @@ function fetch_saslogon_token () {
     echo "${_resp}" | jq -r '.access_token'
 }
 
+function fetch_token () {
+    # Default: use username/pass; use KSA if deploying to viya namespace
+    if [ "${GRAFANA_NAMESPACE}" == "${ESP_NAMESPACE}" ]; then
+        fetch_ksa_token
+    else
+        fetch_saslogon_token
+    fi
+}
+
 function register_oauth_client () {
-    _token="$(fetch_saslogon_token)"
+    _token="$(fetch_token)"
 
     _redirecturl="https://${GRAFANA_DOMAIN}/grafana/login/generic_oauth"
 
@@ -61,10 +81,19 @@ function register_oauth_client () {
         "name": "Grafana"
     }'
 
-    _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients" \
-        -H 'Content-Type: application/json' \
-        -H "Authorization: Bearer ${_token}" \
-        -d "${_body}")
+    # Use appropriate auth header based on authentication mode
+        if [ "${GRAFANA_NAMESPACE}" == "${ESP_NAMESPACE}" ]; then
+            # KSA mode: use custom header
+            _resp=$(curl -v -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients" \
+                -H 'Content-Type: application/json' \
+                -H "X-K8S-SERVICE-ACCOUNT-TOKEN: ${_token}" \
+                -d "${_body}")
+        else
+            _resp=$(curl -k -X POST "https://$ESP_DOMAIN/SASLogon/oauth/clients" \
+                -H 'Content-Type: application/json' \
+                -H "Authorization: Bearer ${_token}" \
+                -d "${_body}")
+        fi
 
     regex_error="error"
     if [[ "${_resp}" =~ $regex_error ]]; then
