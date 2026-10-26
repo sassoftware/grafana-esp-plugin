@@ -125,32 +125,32 @@ Deployment scripts are provided to deploy the plug-in and configure Grafana. The
     export CONTOUR_PROXY=true
     ```
 
-5. (Optional) If installing to a Viya environment, set environment variables to provide credentials of a user with sufficient privileges to register Grafana as an OAuth client with SASLogon.
+5. (Optional) If installing to a namespace outside that of the SAS Viya deployment, set environment variables to provide credentials of a user with sufficient privileges to register Grafana as an OAuth client with SASLogon.
     ```
     export VIYA_USERNAME=<username>
     export VIYA_PASSWORD=<password>
     ```
 
-6. Run `register-oauth-client-viya.sh` or `register-oauth-client-keycloak.sh` adjusting the command to specify the following variables.
-   - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
-   - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
-   ```
-     cd ./install
-     source ./register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
-   ```
-
-7. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
-   - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
-   - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
-   - The _version_ of the plug-in that you want to deploy. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
-      - To get the latest version run 
-      ```
-      curl -X GET -s -k https://api.github.com/repos/sassoftware/grafana-esp-plugin/releases | jq -r 'first | .tag_name'
-      ```
+6. Run `configure-grafana.sh`, adjusting the command to specify the following variables:
+    - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
+    - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
+    - The _version_ of the plug-in that you want to deploy. Ensure that you specify a version of the plug-in that is compatible with your version of Grafana.
+        - To get the latest version run
+       ```
+       curl -X GET -s -k https://api.github.com/repos/sassoftware/grafana-esp-plugin/releases | jq -r 'first | .tag_name'
+       ```
    > **Caution**: Running the script overwrites any existing Grafana configuration.
 
    ```
      bash configure-grafana.sh <esp-namespace> <grafana-namespace> <version>
+   ```
+
+7. Run `register-oauth-client-viya.sh` or `register-oauth-client-keycloak.sh` adjusting the command to specify the following variables.
+    - The Kubernetes namespace in which SAS Event Stream Processing is deployed, _esp-namespace_.
+    - The Kubernetes namespace in which Grafana is deployed, _grafana-namespace_.
+   ```
+     cd ./install
+     source ./register-oauth-client-viya.sh <esp-namespace> <grafana-namespace>
    ```
 
 8. If Grafana is not running in the same namespace as the SAS Viya platform, you must update the Content Security Policy (CSP) for SAS Logon to allow the Grafana host name to be used as a target of form submission. 
