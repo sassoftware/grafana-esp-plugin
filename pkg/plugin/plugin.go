@@ -515,16 +515,14 @@ func (d *SampleDatasource) fetchServerInfoFromDiscoveryEndpoint(authHeader *stri
 	if resp.StatusCode != 200 {
 		switch resp.StatusCode {
 		case 401:
-			var message = fmt.Sprintf("Connection to discovery endpoint rejected due to unauthorized credentials.")
 			var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
 			log.DefaultLogger.Debug("Discovery service authorization failure",
 				"authorizationHeaderPresent", hasAuthHeader,
 				"oauthPassThru", d.jsonData.OauthPassThru,
 			)
-			return nil, fmt.Errorf(message)
+			return nil, errors.New("Connection to discovery endpoint rejected due to unauthorized credentials.")
 		default:
-			var message = fmt.Sprintf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
-			return nil, fmt.Errorf(message)
+			return nil, fmt.Errorf("The discovery service sent an unexpected HTTP status code: %d", resp.StatusCode)
 		}
 	}
 
@@ -668,15 +666,14 @@ func (d *SampleDatasource) fetchServerInfoFromEspInstance(authHeader *string) (*
 	if resp.StatusCode != 200 {
 		switch resp.StatusCode {
 		case 401:
-			var message = fmt.Sprintf("Connection to ESP server endpoint rejected due to unauthorized credentials.")
 			var hasAuthHeader = len(resp.Request.Header.Get("Authorization")) > 0
 			log.DefaultLogger.Debug("ESP server authorization failure",
 				"authorizationHeaderPresent", hasAuthHeader,
 				"oauthPassThru", d.jsonData.OauthPassThru,
 			)
-			return nil, fmt.Errorf(message)
+			return nil, errors.New("Connection to ESP server endpoint rejected due to unauthorized credentials.")
 		default:
-			var message = fmt.Sprintf("The ESP server sent an unexpected HTTP status code: %d", resp.StatusCode)
+			message := fmt.Sprintf("The ESP server sent an unexpected HTTP status code: %d", resp.StatusCode)
 
 			responseBody, err := io.ReadAll(resp.Body)
 			if err == nil {
@@ -685,7 +682,7 @@ func (d *SampleDatasource) fetchServerInfoFromEspInstance(authHeader *string) (*
 				log.DefaultLogger.Debug("Unexpected ESP server response. Unable to serialize response body.")
 			}
 
-			return nil, fmt.Errorf(message)
+			return nil, errors.New(message)
 		}
 	}
 
