@@ -6,6 +6,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"net/url"
@@ -309,7 +310,7 @@ func (espWsClient *EspWsClient) handleSchemaMessage(message *messagedto.SchemaMe
 func (espWsClient *EspWsClient) handleErrorMessage(message *messagedto.ErrorMessageDTO) {
 	log.DefaultLogger.Error(fmt.Sprintf("Received error message: %v", message))
 
-	espWsClient.Errors <- fmt.Errorf(message.Text)
+	espWsClient.Errors <- errors.New(message.Text)
 }
 
 func (espWsClient *EspWsClient) handleEventMessage(message *messagedto.EventMessageDTO) {
